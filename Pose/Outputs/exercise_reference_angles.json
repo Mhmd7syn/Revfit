@@ -1,0 +1,330 @@
+{
+    "barbell biceps curl": {
+        "angle_configs": {
+            "ELBOW_ANGLE": [
+                "shoulder",
+                "elbow",
+                "wrist"
+            ],
+            "SHOULDER_SWING": [
+                "vertical",
+                "shoulder",
+                "elbow"
+            ]
+        },
+        "ELBOW_ANGLE_min": 19.746920267639872,
+        "ELBOW_ANGLE_max": 172.08159392259816,
+        "SHOULDER_SWING_min": 136.78693808442168,
+        "SHOULDER_SWING_max": 174.9637502520418
+    },
+    "bench press": {
+        "angle_configs": {
+            "ELBOW_ANGLE": [
+                "shoulder",
+                "elbow",
+                "wrist"
+            ],
+            "ELBOW_FLARE": [
+                "hip",
+                "shoulder",
+                "elbow"
+            ]
+        },
+        "ELBOW_ANGLE_min": 49.26727457149089,
+        "ELBOW_ANGLE_max": 169.3842595524142,
+        "ELBOW_FLARE_min": 25.72182388949018,
+        "ELBOW_FLARE_max": 136.29386599680876
+    },
+    "chest fly machine": {
+        "angle_configs": {
+            "ELBOW_ANGLE": [
+                "shoulder",
+                "elbow",
+                "wrist"
+            ]
+        },
+        "ELBOW_ANGLE_min": 18.424718491366747,
+        "ELBOW_ANGLE_max": 167.27085624804565
+    },
+    "deadlift": {
+        "angle_configs": {
+            "HIP_EXTENSION": [
+                "shoulder",
+                "hip",
+                "knee"
+            ]
+        },
+        "HIP_EXTENSION_min": 85.72884270929556,
+        "HIP_EXTENSION_max": 173.43381995969742
+    },
+    "hammer curl": {
+        "angle_configs": {
+            "ELBOW_ANGLE": [
+                "shoulder",
+                "elbow",
+                "wrist"
+            ],
+            "SHOULDER_SWING": [
+                "vertical",
+                "shoulder",
+                "elbow"
+            ]
+        },
+        "ELBOW_ANGLE_min": 21.360846914685855,
+        "ELBOW_ANGLE_max": 174.75873277493284,
+        "SHOULDER_SWING_min": 130.64262110062597,
+        "SHOULDER_SWING_max": 177.2068356974893
+    },
+    "hip thrust": {
+        "angle_configs": {
+            "HIP_EXTENSION": [
+                "shoulder",
+                "hip",
+                "knee"
+            ],
+            "SHIN_ANGLE": [
+                "vertical",
+                "ankle",
+                "knee"
+            ]
+        },
+        "HIP_EXTENSION_min": 46.0407643115284,
+        "HIP_EXTENSION_max": 162.8070927591411,
+        "SHIN_ANGLE_min": 4.664415653818282,
+        "SHIN_ANGLE_max": 60.2404493285658
+    },
+    "lat pulldown": {
+        "angle_configs": {
+            "ELBOW_ANGLE": [
+                "shoulder",
+                "elbow",
+                "wrist"
+            ],
+            "TORSO_SWING": [
+                "vertical",
+                "hip",
+                "shoulder"
+            ]
+        },
+        "ELBOW_ANGLE_min": 34.74989737491466,
+        "ELBOW_ANGLE_max": 171.0809603713041,
+        "TORSO_SWING_min": 3.3331163849192977,
+        "TORSO_SWING_max": 29.988948295076717
+    },
+    "lateral raise": {
+        "angle_configs": {
+            "SHOULDER_ABDUCTION": [
+                "hip",
+                "shoulder",
+                "elbow"
+            ],
+            "ELBOW_BEND": [
+                "shoulder",
+                "elbow",
+                "wrist"
+            ]
+        },
+        "SHOULDER_ABDUCTION_min": 8.707169606300697,
+        "SHOULDER_ABDUCTION_max": 110.74622565954482,
+        "ELBOW_BEND_min": 108.49843946374295,
+        "ELBOW_BEND_max": 178.0783267241191
+    },
+    "leg extension": {
+        "angle_configs": {
+            "KNEE_ANGLE": [
+                "hip",
+                "knee",
+                "ankle"
+            ],
+            "TORSO_STABILITY": [
+                "shoulder",
+                "hip",
+                "knee"
+            ]
+        },
+        "KNEE_ANGLE_min": 80.5596046209178,
+        "KNEE_ANGLE_max": 162.67213338367367,
+        "TORSO_STABILITY_min": 71.37531663549197,
+        "TORSO_STABILITY_max": 149.60757382828402
+    },
+    "leg raises": {
+        "angle_configs": {
+            "HIP_EXTENSION": [
+                "shoulder",
+                "hip",
+                "knee"
+            ],
+            "KNEE_ANGLE": [
+                "hip",
+                "knee",
+                "ankle"
+            ]
+        },
+        "HIP_EXTENSION_min": 45.49491359387928,
+        "HIP_EXTENSION_max": 172.49973595106334,
+        "KNEE_ANGLE_min": 78.15026315326071,
+        "KNEE_ANGLE_max": 177.10716021973596
+    },
+    "plank": {
+        "angle_configs": {
+            "BODY_LINE": [
+                "shoulder",
+                "hip",
+                "ankle"
+            ],
+            "HIP_HIKE": [
+                "shoulder",
+                "hip",
+                "knee"
+            ]
+        },
+        "BODY_LINE_min": 65.0112677065632,
+        "BODY_LINE_max": 168.45373942240428,
+        "HIP_HIKE_min": 52.87840738329856,
+        "HIP_HIKE_max": 168.1874403222561
+    },
+    "pull up": {
+        "angle_configs": {
+            "ELBOW_ANGLE": [
+                "shoulder",
+                "elbow",
+                "wrist"
+            ],
+            "BODY_SWING": [
+                "vertical",
+                "shoulder",
+                "hip"
+            ]
+        },
+        "ELBOW_ANGLE_min": 19.2428347200269,
+        "ELBOW_ANGLE_max": 178.20027299415213,
+        "BODY_SWING_min": 139.46956123813783,
+        "BODY_SWING_max": 178.49863337876397
+    },
+    "push-up": {
+        "angle_configs": {
+            "ELBOW_ANGLE": [
+                "shoulder",
+                "elbow",
+                "wrist"
+            ],
+            "BODY_LINE": [
+                "shoulder",
+                "hip",
+                "ankle"
+            ]
+        },
+        "ELBOW_ANGLE_min": 62.992558445723574,
+        "ELBOW_ANGLE_max": 175.60490986186258,
+        "BODY_LINE_min": 101.85339987953998,
+        "BODY_LINE_max": 171.18099630519157
+    },
+    "russian twist": {
+        "angle_configs": {
+            "HIP_EXTENSION": [
+                "shoulder",
+                "hip",
+                "knee"
+            ],
+            "TORSO_LEAN": [
+                "vertical",
+                "hip",
+                "shoulder"
+            ]
+        },
+        "HIP_EXTENSION_min": 27.271186198234282,
+        "HIP_EXTENSION_max": 128.18017778921342,
+        "TORSO_LEAN_min": 2.986401711520418,
+        "TORSO_LEAN_max": 60.236513463930706
+    },
+    "shoulder press": {
+        "angle_configs": {
+            "ELBOW_ANGLE": [
+                "shoulder",
+                "elbow",
+                "wrist"
+            ],
+            "TORSO_ARCH": [
+                "vertical",
+                "hip",
+                "shoulder"
+            ]
+        },
+        "ELBOW_ANGLE_min": 17.560550433282717,
+        "ELBOW_ANGLE_max": 172.71000108056344,
+        "TORSO_ARCH_min": 2.03592000479263,
+        "TORSO_ARCH_max": 9.779492694847326
+    },
+    "squat": {
+        "angle_configs": {
+            "KNEE_ANGLE": [
+                "hip",
+                "knee",
+                "ankle"
+            ],
+            "BACK_ANGLE_VERTICAL": [
+                "vertical",
+                "hip",
+                "shoulder"
+            ]
+        },
+        "KNEE_ANGLE_min": 79.71715285090056,
+        "KNEE_ANGLE_max": 177.8868145163717,
+        "BACK_ANGLE_VERTICAL_min": 1.526955995956259,
+        "BACK_ANGLE_VERTICAL_max": 32.969870060367526
+    },
+    "t bar row": {
+        "angle_configs": {
+            "ELBOW_ANGLE": [
+                "shoulder",
+                "elbow",
+                "wrist"
+            ],
+            "BACK_ANGLE_HORIZONTAL": [
+                "horizontal",
+                "hip",
+                "shoulder"
+            ]
+        },
+        "ELBOW_ANGLE_min": 119.96249793701503,
+        "ELBOW_ANGLE_max": 177.45733305264807,
+        "BACK_ANGLE_HORIZONTAL_min": 71.56949846376608,
+        "BACK_ANGLE_HORIZONTAL_max": 105.57011743945066
+    },
+    "tricep dips": {
+        "angle_configs": {
+            "ELBOW_ANGLE": [
+                "shoulder",
+                "elbow",
+                "wrist"
+            ],
+            "TORSO_LEAN": [
+                "vertical",
+                "hip",
+                "shoulder"
+            ]
+        },
+        "ELBOW_ANGLE_min": 59.76222569899175,
+        "ELBOW_ANGLE_max": 176.3681744828974,
+        "TORSO_LEAN_min": 4.690009476538491,
+        "TORSO_LEAN_max": 44.61584425597505
+    },
+    "tricep pushdown": {
+        "angle_configs": {
+            "ELBOW_ANGLE": [
+                "shoulder",
+                "elbow",
+                "wrist"
+            ],
+            "ELBOW_PIN": [
+                "vertical",
+                "shoulder",
+                "elbow"
+            ]
+        },
+        "ELBOW_ANGLE_min": 70.63352666321182,
+        "ELBOW_ANGLE_max": 169.56603723874971,
+        "ELBOW_PIN_min": 155.80047391070855,
+        "ELBOW_PIN_max": 177.91054646466014
+    }
+}
