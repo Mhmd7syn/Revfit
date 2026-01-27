@@ -17,15 +17,15 @@
                     "shoulder",
                     "elbow"
                 ],
-                "message_high": "Keep elbows pinned to your sides!"
+                "message_high": "Keep elbows pinned to your sides (Horizontal Drift)!"
             }
         },
-        "ELBOW_ANGLE_min": 20.103688590818255,
-        "ELBOW_ANGLE_std": 5.283759032076327,
-        "ELBOW_ANGLE_max": 175.8151760718797,
-        "ELBOW_PIN_min": 0.011131380250056585,
-        "ELBOW_PIN_std": 0.052854433523714196,
-        "ELBOW_PIN_max": 0.06307198951641718
+        "ELBOW_ANGLE_min": 20.956976073654413,
+        "ELBOW_ANGLE_std": 20.106207132856373,
+        "ELBOW_ANGLE_max": 173.12239475805708,
+        "ELBOW_PIN_min": 0.010481953124205272,
+        "ELBOW_PIN_std": 0.05207557694474742,
+        "ELBOW_PIN_max": 0.06097601552804311
     },
     "bench press": {
         "angle_configs": {
@@ -54,18 +54,18 @@
                     "wrist",
                     "elbow"
                 ],
-                "message_high": "Stack wrists over elbows (Horizontal drift)."
+                "message_high": "Stack wrists over elbows (Horizontal Drift)."
             }
         },
-        "ELBOW_ANGLE_min": 48.218720003424096,
-        "ELBOW_ANGLE_std": 17.492060690799104,
-        "ELBOW_ANGLE_max": 168.05370223494825,
-        "ELBOW_FLARE_min": 26.525952902845408,
-        "ELBOW_FLARE_std": 44.27020636071309,
-        "ELBOW_FLARE_max": 135.21737868026622,
-        "WRIST_ELBOW_STACK_min": 0.006708774999313548,
-        "WRIST_ELBOW_STACK_std": 0.042789308898657764,
-        "WRIST_ELBOW_STACK_max": 0.07010419632728934
+        "ELBOW_ANGLE_min": 48.9040473123369,
+        "ELBOW_ANGLE_std": 18.40374589124629,
+        "ELBOW_ANGLE_max": 168.82199764083458,
+        "ELBOW_FLARE_min": 27.714062482954716,
+        "ELBOW_FLARE_std": 42.83596737552142,
+        "ELBOW_FLARE_max": 136.79299500813403,
+        "WRIST_ELBOW_STACK_min": 0.007786583136289548,
+        "WRIST_ELBOW_STACK_std": 0.041858741300408515,
+        "WRIST_ELBOW_STACK_max": 0.06701684238818975
     },
     "chest fly machine": {
         "angle_configs": {
@@ -80,9 +80,9 @@
                 "message_low": "Elbows bent too much."
             }
         },
-        "ELBOW_BEND_min": 17.888851480421124,
-        "ELBOW_BEND_std": 14.098093439810773,
-        "ELBOW_BEND_max": 167.44876372694023
+        "ELBOW_BEND_min": 17.439091954404073,
+        "ELBOW_BEND_std": 14.341971208453659,
+        "ELBOW_BEND_max": 167.7105985160185
     },
     "deadlift": {
         "angle_configs": {
@@ -102,26 +102,26 @@
                     "hip",
                     "shoulder"
                 ],
-                "message_high": "Hips too high."
+                "message_low": "Hips too high! Lower hips."
             },
-            "HIP_KNEE_HEIGHT": {
+            "HIP_KNEE_HEIGHT_DEADLIFT": {
                 "type": "vertical_distance",
                 "joints": [
                     "hip",
                     "knee"
                 ],
-                "message_high": "Hips too low."
+                "message_high": "Hips too low! Don't squat the deadlift."
             }
         },
-        "HIP_EXTENSION_min": 83.22076417156083,
-        "HIP_EXTENSION_std": 12.649950310002051,
-        "HIP_EXTENSION_max": 174.2037060696834,
-        "HIP_SHOULDER_HEIGHT_min": 0.06800384706129199,
-        "HIP_SHOULDER_HEIGHT_std": 0.11793520083737641,
-        "HIP_SHOULDER_HEIGHT_max": 0.3201997926782655,
-        "HIP_KNEE_HEIGHT_min": 0.059853054244409905,
-        "HIP_KNEE_HEIGHT_std": 0.09145497682787788,
-        "HIP_KNEE_HEIGHT_max": 0.21290297281335702
+        "HIP_EXTENSION_min": 84.10329638445747,
+        "HIP_EXTENSION_std": 12.628730436558147,
+        "HIP_EXTENSION_max": 174.1890210934402,
+        "HIP_SHOULDER_HEIGHT_min": 0.025962953334269318,
+        "HIP_SHOULDER_HEIGHT_std": 0.0832227255082154,
+        "HIP_SHOULDER_HEIGHT_max": 0.3127578411190568,
+        "HIP_KNEE_HEIGHT_DEADLIFT_min": -0.20968330668078528,
+        "HIP_KNEE_HEIGHT_DEADLIFT_std": 0.1355950234100318,
+        "HIP_KNEE_HEIGHT_DEADLIFT_max": -0.028923163066307704
     },
     "hammer curl": {
         "angle_configs": {
@@ -141,15 +141,15 @@
                     "shoulder",
                     "elbow"
                 ],
-                "message_high": "Keep elbows pinned to your sides!"
+                "message_high": "Keep elbows pinned to your sides (Horizontal Drift)!"
             }
         },
-        "ELBOW_ANGLE_min": 20.353986372750388,
-        "ELBOW_ANGLE_std": 12.099893218209658,
-        "ELBOW_ANGLE_max": 174.6893267501788,
-        "ELBOW_PIN_min": 0.008638222750864531,
-        "ELBOW_PIN_std": 0.048299733550672234,
-        "ELBOW_PIN_max": 0.07387656051861613
+        "ELBOW_ANGLE_min": 19.14131175607791,
+        "ELBOW_ANGLE_std": 12.538714456647236,
+        "ELBOW_ANGLE_max": 174.86975838579443,
+        "ELBOW_PIN_min": 0.007753966627894221,
+        "ELBOW_PIN_std": 0.04947550959384989,
+        "ELBOW_PIN_max": 0.07239754296637871
     },
     "hip thrust": {
         "angle_configs": {
@@ -173,12 +173,12 @@
                 "message_high": "Knees tracking too far forward."
             }
         },
-        "HIP_EXTENSION_min": 54.09580662359542,
-        "HIP_EXTENSION_std": 20.41093280119012,
-        "HIP_EXTENSION_max": 162.1285262329359,
-        "SHIN_ANGLE_min": 4.74103100806619,
-        "SHIN_ANGLE_std": 57.65114641381585,
-        "SHIN_ANGLE_max": 57.04735135671157
+        "HIP_EXTENSION_min": 55.765378163759934,
+        "HIP_EXTENSION_std": 21.419433718492872,
+        "HIP_EXTENSION_max": 163.65814860596686,
+        "SHIN_ANGLE_min": 1.7220031268712235,
+        "SHIN_ANGLE_std": 51.90174335561028,
+        "SHIN_ANGLE_max": 49.35667457313211
     },
     "lat pulldown": {
         "angle_configs": {
@@ -200,15 +200,15 @@
                     "shoulder"
                 ],
                 "message_high": "Leaning back too far.",
-                "message_low": "Leaning forward too far."
+                "message_low": "Leaning forward too much."
             }
         },
-        "ELBOW_ANGLE_min": 34.9837482102846,
-        "ELBOW_ANGLE_std": 16.429098185495143,
-        "ELBOW_ANGLE_max": 171.324912978141,
-        "TORSO_SWING_min": 2.4839412722741683,
-        "TORSO_SWING_std": 51.37917777067238,
-        "TORSO_SWING_max": 35.65213668130992
+        "ELBOW_ANGLE_min": 35.0548557336256,
+        "ELBOW_ANGLE_std": 12.45810264388211,
+        "ELBOW_ANGLE_max": 171.9175206669129,
+        "TORSO_SWING_min": 2.4223953272476195,
+        "TORSO_SWING_std": 46.30725265223337,
+        "TORSO_SWING_max": 31.659967375884783
     },
     "lateral raise": {
         "angle_configs": {
@@ -234,10 +234,10 @@
             "IMPINGEMENT_RISK": {
                 "type": "vertical_distance",
                 "joints": [
-                    "shoulder",
-                    "elbow"
+                    "elbow",
+                    "shoulder"
                 ],
-                "message_high": "Elbows too high relative to shoulders (Impingement risk)."
+                "message_low": "Lower elbows slightly to protect shoulders."
             },
             "WRIST_ELBOW_HEIGHT": {
                 "type": "vertical_distance",
@@ -245,21 +245,21 @@
                     "wrist",
                     "elbow"
                 ],
-                "message_high": "Lead with elbows, not wrists."
+                "message_low": "Lead with elbows, not wrists."
             }
         },
-        "SHOULDER_ABDUCTION_min": 8.4248012796912,
-        "SHOULDER_ABDUCTION_std": 26.30401375865866,
-        "SHOULDER_ABDUCTION_max": 112.83403417882666,
-        "ELBOW_BEND_min": 102.74225844490053,
-        "ELBOW_BEND_std": 2.0738757513234245,
-        "ELBOW_BEND_max": 178.3087742782182,
-        "IMPINGEMENT_RISK_min": 0.003449408129420811,
-        "IMPINGEMENT_RISK_std": 0.06953809036700803,
-        "IMPINGEMENT_RISK_max": 0.26305887072875694,
-        "WRIST_ELBOW_HEIGHT_min": 0.002003079611961156,
-        "WRIST_ELBOW_HEIGHT_std": 0.06562756991451849,
-        "WRIST_ELBOW_HEIGHT_max": 0.21356764252055183
+        "SHOULDER_ABDUCTION_min": 8.636607573015722,
+        "SHOULDER_ABDUCTION_std": 27.153890726346145,
+        "SHOULDER_ABDUCTION_max": 112.12357394625751,
+        "ELBOW_BEND_min": 109.7493349938486,
+        "ELBOW_BEND_std": 2.289198540733079,
+        "ELBOW_BEND_max": 178.26781491735252,
+        "IMPINGEMENT_RISK_min": -0.030464334639947157,
+        "IMPINGEMENT_RISK_std": 0.06845043750697656,
+        "IMPINGEMENT_RISK_max": 0.2605454074218869,
+        "WRIST_ELBOW_HEIGHT_min": -0.04282318744553278,
+        "WRIST_ELBOW_HEIGHT_std": 0.06323214134493593,
+        "WRIST_ELBOW_HEIGHT_max": 0.21208888659738515
     },
     "leg extension": {
         "angle_configs": {
@@ -284,12 +284,12 @@
                 "message_low": "Hips flexed too much (sitting back?)."
             }
         },
-        "KNEE_ANGLE_min": 81.01372827897535,
-        "KNEE_ANGLE_std": 21.445654756073687,
-        "KNEE_ANGLE_max": 161.30115186695406,
-        "TORSO_STABILITY_min": 71.7025216118192,
-        "TORSO_STABILITY_std": 22.653632273114773,
-        "TORSO_STABILITY_max": 149.62675412542256
+        "KNEE_ANGLE_min": 81.23288591525147,
+        "KNEE_ANGLE_std": 21.880704219005622,
+        "KNEE_ANGLE_max": 160.82004792442254,
+        "TORSO_STABILITY_min": 70.99758931193594,
+        "TORSO_STABILITY_std": 22.78583101694315,
+        "TORSO_STABILITY_max": 150.52289858227547
     },
     "leg raises": {
         "angle_configs": {
@@ -314,12 +314,12 @@
                 "message_low": "Bend knees less."
             }
         },
-        "HIP_EXTENSION_min": 45.12616738461137,
-        "HIP_EXTENSION_std": 14.210859557156354,
-        "HIP_EXTENSION_max": 173.47078270283674,
-        "LEG_STRAIGHTNESS_min": 71.49554835439427,
-        "LEG_STRAIGHTNESS_std": 6.013489850460782,
-        "LEG_STRAIGHTNESS_max": 176.83896193429806
+        "HIP_EXTENSION_min": 44.22980817009875,
+        "HIP_EXTENSION_std": 14.23596262488252,
+        "HIP_EXTENSION_max": 173.4891154204162,
+        "LEG_STRAIGHTNESS_min": 79.89462448470657,
+        "LEG_STRAIGHTNESS_std": 7.349390872661514,
+        "LEG_STRAIGHTNESS_max": 176.24215805877338
     },
     "plank": {
         "angle_configs": {
@@ -331,11 +331,23 @@
                     "ankle"
                 ],
                 "message_high": "Body not straight (Sagging or Piking)."
+            },
+            "HIP_HIKE": {
+                "type": "distance_from_line",
+                "joints": [
+                    "hip",
+                    "shoulder",
+                    "ankle"
+                ],
+                "message_high": "Body not straight (Sagging or Piking)."
             }
         },
-        "BODY_LINE_min": 0.01115524549040943,
-        "BODY_LINE_std": 0.08210540338732537,
-        "BODY_LINE_max": 0.1556119395777357
+        "BODY_LINE_min": 0.010572339746260446,
+        "BODY_LINE_std": 0.08718094124648286,
+        "BODY_LINE_max": 0.1423129225711809,
+        "HIP_HIKE_min": 0.010572339746260446,
+        "HIP_HIKE_std": 0.08718094124648286,
+        "HIP_HIKE_max": 0.1423129225711809
     },
     "pull up": {
         "angle_configs": {
@@ -364,18 +376,18 @@
                     "nose",
                     "wrist"
                 ],
-                "message_low": "Get your chin over the bar!"
+                "message_high": "Get your chin over the bar!"
             }
         },
-        "ELBOW_ANGLE_min": 18.88854139756406,
-        "ELBOW_ANGLE_std": 5.278505977900582,
-        "ELBOW_ANGLE_max": 177.24222219376153,
-        "BODY_SWING_min": 150.7435469703109,
-        "BODY_SWING_std": 2.090087011312663,
-        "BODY_SWING_max": 178.33520508874486,
-        "CHIN_BAR_HEIGHT_min": 0.002231718972325325,
-        "CHIN_BAR_HEIGHT_std": 0.11451152994104984,
-        "CHIN_BAR_HEIGHT_max": 0.3321577365366885
+        "ELBOW_ANGLE_min": 16.428172195860487,
+        "ELBOW_ANGLE_std": 3.2598237767455633,
+        "ELBOW_ANGLE_max": 177.94892045034447,
+        "BODY_SWING_min": 146.08576350663003,
+        "BODY_SWING_std": 2.10246934611615,
+        "BODY_SWING_max": 178.2908776225842,
+        "CHIN_BAR_HEIGHT_min": -0.23383228995782487,
+        "CHIN_BAR_HEIGHT_std": 0.13444365723199572,
+        "CHIN_BAR_HEIGHT_max": 0.3305240488227676
     },
     "push-up": {
         "angle_configs": {
@@ -399,12 +411,12 @@
                 "message_high": "Body not straight (Sagging or Piking)."
             }
         },
-        "ELBOW_ANGLE_min": 66.8694150544082,
-        "ELBOW_ANGLE_std": 9.303803126872857,
-        "ELBOW_ANGLE_max": 174.8513102756399,
-        "BODY_LINE_min": 0.009036807046985885,
-        "BODY_LINE_std": 0.05096037313759526,
-        "BODY_LINE_max": 0.07017569158547482
+        "ELBOW_ANGLE_min": 63.08064077295068,
+        "ELBOW_ANGLE_std": 10.814701375312117,
+        "ELBOW_ANGLE_max": 175.33092665616005,
+        "BODY_LINE_min": 0.007761239277289928,
+        "BODY_LINE_std": 0.06652104418741737,
+        "BODY_LINE_max": 0.08875467449590287
     },
     "russian twist": {
         "angle_configs": {
@@ -426,15 +438,15 @@
                     "shoulder"
                 ],
                 "message_high": "Leaning back too far.",
-                "message_low": "Leaning forward too far."
+                "message_low": "Leaning forward too much."
             }
         },
-        "HIP_EXTENSION_min": 24.896154613112603,
-        "HIP_EXTENSION_std": 54.40563766535737,
-        "HIP_EXTENSION_max": 116.72642579628025,
-        "TORSO_LEAN_min": 2.4808808670716562,
-        "TORSO_LEAN_std": 55.56285420997187,
-        "TORSO_LEAN_max": 59.32509992070358
+        "HIP_EXTENSION_min": 27.68342606221585,
+        "HIP_EXTENSION_std": 53.5961111812084,
+        "HIP_EXTENSION_max": 119.92770584536336,
+        "TORSO_LEAN_min": 2.990645845196798,
+        "TORSO_LEAN_std": 55.42018509530232,
+        "TORSO_LEAN_max": 59.65564480678382
     },
     "shoulder press": {
         "angle_configs": {
@@ -456,7 +468,7 @@
                     "shoulder"
                 ],
                 "message_high": "Leaning back too far.",
-                "message_low": "Leaning forward too far."
+                "message_low": "Leaning forward too much."
             },
             "WRIST_ELBOW_STACK": {
                 "type": "horizontal_distance",
@@ -464,18 +476,18 @@
                     "wrist",
                     "elbow"
                 ],
-                "message_high": "Stack wrists over elbows (Horizontal drift)."
+                "message_high": "Stack wrists over elbows (Horizontal Drift)."
             }
         },
-        "ELBOW_ANGLE_min": 17.504029445405383,
-        "ELBOW_ANGLE_std": 6.636065688270888,
-        "ELBOW_ANGLE_max": 172.75318905566573,
-        "TORSO_ARCH_min": 2.0664260567772637,
-        "TORSO_ARCH_std": 4.681136641322102,
-        "TORSO_ARCH_max": 9.77741038162246,
-        "WRIST_ELBOW_STACK_min": 0.0008557272308013018,
-        "WRIST_ELBOW_STACK_std": 0.02472437755367327,
-        "WRIST_ELBOW_STACK_max": 0.06590281974743395
+        "ELBOW_ANGLE_min": 18.292430823407308,
+        "ELBOW_ANGLE_std": 6.676727100356805,
+        "ELBOW_ANGLE_max": 173.1672954382438,
+        "TORSO_ARCH_min": 1.9887188163664136,
+        "TORSO_ARCH_std": 5.115121177733795,
+        "TORSO_ARCH_max": 10.333655838127099,
+        "WRIST_ELBOW_STACK_min": 0.0008226326283286599,
+        "WRIST_ELBOW_STACK_std": 0.025333716095421694,
+        "WRIST_ELBOW_STACK_max": 0.06780364934135885
     },
     "squat": {
         "angle_configs": {
@@ -497,26 +509,26 @@
                     "shoulder"
                 ],
                 "message_high": "Leaning back too far.",
-                "message_low": "Leaning forward too far."
+                "message_low": "Leaning forward too much."
             },
-            "HIP_KNEE_HEIGHT": {
+            "SQUAT_DEPTH_CHECK": {
                 "type": "vertical_distance",
                 "joints": [
                     "hip",
                     "knee"
                 ],
-                "message_high": "Hips too low."
+                "message_low": "Squat deeper!"
             }
         },
-        "KNEE_ANGLE_min": 81.40022418396465,
-        "KNEE_ANGLE_std": 3.661276513702054,
-        "KNEE_ANGLE_max": 177.74429391252914,
-        "BACK_ANGLE_VERTICAL_min": 1.7409443340036486,
-        "BACK_ANGLE_VERTICAL_std": 52.51116886337719,
-        "BACK_ANGLE_VERTICAL_max": 32.943507738614635,
-        "HIP_KNEE_HEIGHT_min": 0.03313469993216651,
-        "HIP_KNEE_HEIGHT_std": 0.06359422011559702,
-        "HIP_KNEE_HEIGHT_max": 0.24075812447283948
+        "KNEE_ANGLE_min": 83.5474034012905,
+        "KNEE_ANGLE_std": 3.3208200968637427,
+        "KNEE_ANGLE_max": 177.91402993814566,
+        "BACK_ANGLE_VERTICAL_min": 1.8231098182904966,
+        "BACK_ANGLE_VERTICAL_std": 52.59167880257238,
+        "BACK_ANGLE_VERTICAL_max": 32.79372877372992,
+        "SQUAT_DEPTH_CHECK_min": -0.24226956069469452,
+        "SQUAT_DEPTH_CHECK_std": 0.09248181923530725,
+        "SQUAT_DEPTH_CHECK_max": 0.011693110330063
     },
     "t bar row": {
         "angle_configs": {
@@ -550,15 +562,15 @@
                 "message_high": "Keep neck neutral with spine."
             }
         },
-        "ELBOW_ANGLE_min": 122.66089159638476,
-        "ELBOW_ANGLE_std": 2.846939895556875,
-        "ELBOW_ANGLE_max": 177.48298149131384,
-        "BACK_ANGLE_HORIZONTAL_min": 70.99547528087709,
-        "BACK_ANGLE_HORIZONTAL_std": 24.69505088805697,
-        "BACK_ANGLE_HORIZONTAL_max": 106.08288438949181,
-        "NECK_ALIGNMENT_min": 0.030944286414662587,
-        "NECK_ALIGNMENT_std": 0.05264173436315904,
-        "NECK_ALIGNMENT_max": 0.10920246189780156
+        "ELBOW_ANGLE_min": 120.66370283202754,
+        "ELBOW_ANGLE_std": 2.9759078870873643,
+        "ELBOW_ANGLE_max": 177.41744930518087,
+        "BACK_ANGLE_HORIZONTAL_min": 71.42674156264553,
+        "BACK_ANGLE_HORIZONTAL_std": 24.055074929882558,
+        "BACK_ANGLE_HORIZONTAL_max": 105.6981795229627,
+        "NECK_ALIGNMENT_min": 0.030597951678864237,
+        "NECK_ALIGNMENT_std": 0.05449105068549462,
+        "NECK_ALIGNMENT_max": 0.11002688202905746
     },
     "tricep dips": {
         "angle_configs": {
@@ -580,7 +592,7 @@
                     "shoulder"
                 ],
                 "message_high": "Leaning back too far.",
-                "message_low": "Leaning forward too far."
+                "message_low": "Leaning forward too much."
             },
             "SHOULDER_ELBOW_DEPTH": {
                 "type": "vertical_distance",
@@ -588,18 +600,18 @@
                     "shoulder",
                     "elbow"
                 ],
-                "message_high": "Elbows too high relative to shoulders (Impingement risk)."
+                "message_high": "Too deep! Shoulders dropping below elbows."
             }
         },
-        "ELBOW_ANGLE_min": 65.19248047151564,
-        "ELBOW_ANGLE_std": 6.244656266413577,
-        "ELBOW_ANGLE_max": 175.95003801897238,
-        "TORSO_LEAN_min": 4.864786638385139,
-        "TORSO_LEAN_std": 54.16163989104648,
-        "TORSO_LEAN_max": 45.32029955495972,
-        "SHOULDER_ELBOW_DEPTH_min": 0.027980465049806395,
-        "SHOULDER_ELBOW_DEPTH_std": 0.08204594971499195,
-        "SHOULDER_ELBOW_DEPTH_max": 0.20621110949861376
+        "ELBOW_ANGLE_min": 59.377066424216636,
+        "ELBOW_ANGLE_std": 7.076585965101469,
+        "ELBOW_ANGLE_max": 175.57008061039227,
+        "TORSO_LEAN_min": 5.2569510565567406,
+        "TORSO_LEAN_std": 56.90459303321861,
+        "TORSO_LEAN_max": 51.98747603101223,
+        "SHOULDER_ELBOW_DEPTH_min": -0.20879039834988744,
+        "SHOULDER_ELBOW_DEPTH_std": 0.07806053375204806,
+        "SHOULDER_ELBOW_DEPTH_max": 0.020534591259140717
     },
     "tricep pushdown": {
         "angle_configs": {
@@ -619,14 +631,14 @@
                     "shoulder",
                     "elbow"
                 ],
-                "message_high": "Keep elbows pinned to your sides!"
+                "message_high": "Keep elbows pinned to your sides (Horizontal Drift)!"
             }
         },
-        "ELBOW_ANGLE_min": 72.83817895179409,
-        "ELBOW_ANGLE_std": 13.332848366124272,
-        "ELBOW_ANGLE_max": 170.3679754073511,
-        "ELBOW_PIN_min": 0.00690237292472054,
-        "ELBOW_PIN_std": 0.03146729651431187,
-        "ELBOW_PIN_max": 0.0465277975972961
+        "ELBOW_ANGLE_min": 70.59843733802816,
+        "ELBOW_ANGLE_std": 13.508588130505519,
+        "ELBOW_ANGLE_max": 170.2987905316414,
+        "ELBOW_PIN_min": 0.0059918902996109755,
+        "ELBOW_PIN_std": 0.03204120358396888,
+        "ELBOW_PIN_max": 0.04607483181284695
     }
 }

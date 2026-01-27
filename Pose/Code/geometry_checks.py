@@ -11,7 +11,12 @@ class GeometryChecks:
 
     @staticmethod
     def calculate_vertical_distance(p1, p2):
-        return abs(p1[1] - p2[1])
+        """Calculates signed vertical distance (p1_y - p2_y).
+        In image coordinates (Y down):
+        - Positive: p1 is below p2
+        - Negative: p1 is above p2
+        """
+        return p1[1] - p2[1]
 
     @staticmethod
     def calculate_angle(a, b, c):

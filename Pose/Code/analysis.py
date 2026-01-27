@@ -13,54 +13,40 @@ from process_video_for_reference import process_video_for_reference, init_worker
 
 # Format: { 'names': [...], 'type': 'angle'|'horizontal_distance'|'vertical_distance'|'distance_from_line', 'joints': [...] }
 _JOINT_GROUPS = {
-    ('ELBOW_ANGLE', 'ELBOW_BEND'): {
+    # --- ANGLES ---
+    ('ELBOW_ANGLE', 'ELBOW_BEND', 'ARM_BEND'): {
         'type': 'angle',
         'joints': ['shoulder', 'elbow', 'wrist'],
         'message_high': 'Elbows too straight.',
         'message_low': 'Elbows bent too much.'
     },
-    ('SHOULDER_SWING', 'ELBOW_PIN', 'ELBOW_STABILITY'): {
-        'type': 'horizontal_distance',
-        'joints': ['shoulder', 'elbow'],
-        'message_high': 'Keep elbows pinned to your sides!'
+    ('KNEE_ANGLE', 'LEG_STRAIGHTNESS', 'SOFT_KNEES'): {
+        'type': 'angle',
+        'joints': ['hip', 'knee', 'ankle'],
+        'message_high': 'Legs too straight (Lockout?).',
+        'message_low': 'Bend knees less.'
     },
-    ('HIP_EXTENSION', 'TORSO_STABILITY', 'HIP_HIKE'): {
+    ('HIP_EXTENSION', 'TORSO_STABILITY'): {
         'type': 'angle',
         'joints': ['shoulder', 'hip', 'knee'],
         'message_high': 'Hips extended too much.',
         'message_low': 'Hips flexed too much (sitting back?).'
-    },
-    ('TORSO_SWING', 'TORSO_LEAN', 'TORSO_ARCH', 'BACK_ANGLE_VERTICAL'): {
-        'type': 'angle',
-        'joints': ['vertical', 'hip', 'shoulder'],
-        'message_high': 'Leaning back too far.',
-        'message_low': 'Leaning forward too far.'
-    },
-    ('SHIN_ANGLE',): {
-        'type': 'angle',
-        'joints': ['vertical', 'ankle', 'knee'],
-        'message_high': 'Knees tracking too far forward.'
     },
     ('SHOULDER_ABDUCTION', 'ELBOW_FLARE'): {
         'type': 'angle',
         'joints': ['hip', 'shoulder', 'elbow'],
         'message_high': 'Elbows flaring out too much.'
     },
-    ('KNEE_ANGLE', 'SOFT_KNEES', 'LEG_STRAIGHTNESS'): {
+    ('SHIN_ANGLE',): {
         'type': 'angle',
-        'joints': ['hip', 'knee', 'ankle'],
-        'message_high': 'Legs too straight (Lockout?).',
-        'message_low': 'Bend knees less.'
+        'joints': ['vertical', 'ankle', 'knee'],
+        'message_high': 'Knees tracking too far forward.'
     },
-    ('BODY_LINE', 'HIP_SAG'): {
-        'type': 'distance_from_line',
-        'joints': ['hip', 'shoulder', 'ankle'],
-        'message_high': 'Body not straight (Sagging or Piking).'
-    },
-    ('BODY_SWING',): {
+    ('TORSO_SWING', 'TORSO_LEAN', 'TORSO_ARCH', 'BACK_ANGLE_VERTICAL'): {
         'type': 'angle',
-        'joints': ['vertical', 'shoulder', 'hip'],
-        'message_high': 'Excessive body swing.'
+        'joints': ['vertical', 'hip', 'shoulder'],
+        'message_high': 'Leaning back too far.',
+        'message_low': 'Leaning forward too much.'
     },
     ('BACK_ANGLE_HORIZONTAL',): {
         'type': 'angle',
@@ -68,40 +54,71 @@ _JOINT_GROUPS = {
         'message_high': 'Torso too upright.',
         'message_low': 'Torso too low.'
     },
+    ('BODY_SWING',): {
+        'type': 'angle',
+        'joints': ['vertical', 'shoulder', 'hip'],
+        'message_high': 'Excessive body swing.'
+    },
+
+    # --- HORIZONTAL DISTANCES ---
+    ('SHOULDER_SWING', 'ELBOW_PIN', 'ELBOW_STABILITY'): {
+        'type': 'horizontal_distance',
+        'joints': ['shoulder', 'elbow'],
+        'message_high': 'Keep elbows pinned to your sides (Horizontal Drift)!'
+    },
     ('WRIST_ELBOW_STACK',): {
         'type': 'horizontal_distance',
         'joints': ['wrist', 'elbow'],
-        'message_high': 'Stack wrists over elbows (Horizontal drift).'
+        'message_high': 'Stack wrists over elbows (Horizontal Drift).'
     },
-    ('SHOULDER_ELBOW_DEPTH', 'IMPINGEMENT_RISK'): {
+
+    # --- VERTICAL DISTANCES ---
+    ('SHOULDER_ELBOW_DEPTH',): {
         'type': 'vertical_distance',
         'joints': ['shoulder', 'elbow'],
-        'message_high': 'Elbows too high relative to shoulders (Impingement risk).'
+        'message_high': 'Too deep! Shoulders dropping below elbows.'
+    },
+    ('IMPINGEMENT_RISK',): {
+         'type': 'vertical_distance',
+         'joints': ['elbow', 'shoulder'],
+         'message_low': 'Lower elbows slightly to protect shoulders.'
     },
     ('WRIST_ELBOW_HEIGHT',): {
         'type': 'vertical_distance',
         'joints': ['wrist', 'elbow'],
-        'message_high': 'Lead with elbows, not wrists.'
+        'message_low': 'Lead with elbows, not wrists.'
     },
     ('CHIN_BAR_HEIGHT',): {
         'type': 'vertical_distance',
         'joints': ['nose', 'wrist'],
-        'message_low': 'Get your chin over the bar!' # Assuming typical chin (nose) < bar (wrist) Y check
+        'message_high': 'Get your chin over the bar!' 
+    },
+    ('HIP_SHOULDER_HEIGHT',): {
+        'type': 'vertical_distance',
+        'joints': ['hip', 'shoulder'],
+        'message_low': 'Hips too high! Lower hips.'
+    },
+    ('HIP_KNEE_HEIGHT_DEADLIFT',): {
+        'type': 'vertical_distance',
+        'joints': ['hip', 'knee'],
+        'message_high': 'Hips too low! Don\'t squat the deadlift.' 
+    },
+    ('SQUAT_DEPTH_CHECK',): {
+        'type': 'vertical_distance',
+        'joints': ['hip', 'knee'],
+        'message_low': 'Squat deeper!'
+    },
+
+    # --- DISTANCE FROM LINE ---
+    ('BODY_LINE', 'HIP_SAG', 'HIP_HIKE'): {
+        'type': 'distance_from_line',
+        'joints': ['hip', 'shoulder', 'ankle'],
+        'message_high': 'Body not straight (Sagging or Piking).'
     },
     ('NECK_ALIGNMENT',): {
         'type': 'distance_from_line',
         'joints': ['nose', 'shoulder', 'hip'],
         'message_high': 'Keep neck neutral with spine.'
-    },
-    ('HIP_SHOULDER_HEIGHT',): {
-        'type': 'vertical_distance',
-        'joints': ['hip', 'shoulder'],
-        'message_high': 'Hips too high.' # e.g. Deadlift setup
-    },
-    ('HIP_KNEE_HEIGHT',): {
-        'type': 'vertical_distance',
-        'joints': ['hip', 'knee'],
-        'message_high': 'Hips too low.'
     },
     ('HIP_ALIGNMENT',): {
         'type': 'distance_from_line',
@@ -116,7 +133,7 @@ JOINT_DEFINITIONS = {name: config for names, config in _JOINT_GROUPS.items() for
 # Group exercises with identical configurations
 _EXERCISE_GROUPS = {
     ('barbell biceps curl', 'hammer curl'): ['ELBOW_ANGLE', 'ELBOW_PIN'],
-    ('deadlift',): ['HIP_EXTENSION', 'HIP_SHOULDER_HEIGHT', 'HIP_KNEE_HEIGHT'],
+    ('deadlift',): ['HIP_EXTENSION', 'HIP_SHOULDER_HEIGHT', 'HIP_KNEE_HEIGHT_DEADLIFT'],
     ('romanian deadlift',): ['HIP_EXTENSION', 'SOFT_KNEES', 'NECK_ALIGNMENT'],
     ('bench press',): ['ELBOW_ANGLE', 'ELBOW_FLARE', 'WRIST_ELBOW_STACK'],
     ('chest fly machine',): ['ELBOW_BEND'],
@@ -125,12 +142,12 @@ _EXERCISE_GROUPS = {
     ('lateral raise',): ['SHOULDER_ABDUCTION', 'ELBOW_BEND', 'IMPINGEMENT_RISK', 'WRIST_ELBOW_HEIGHT'],
     ('leg extension',): ['KNEE_ANGLE', 'TORSO_STABILITY'],
     ('leg raises',): ['HIP_EXTENSION', 'LEG_STRAIGHTNESS'],
-    ('plank',): ['BODY_LINE'],
+    ('plank',): ['BODY_LINE', 'HIP_HIKE'],
     ('pull up',): ['ELBOW_ANGLE', 'BODY_SWING', 'CHIN_BAR_HEIGHT'],
     ('push-up',): ['ELBOW_ANGLE', 'BODY_LINE'],
     ('russian twist',): ['HIP_EXTENSION', 'TORSO_LEAN'],
     ('shoulder press',): ['ELBOW_ANGLE', 'TORSO_ARCH', 'WRIST_ELBOW_STACK'],
-    ('squat',): ['KNEE_ANGLE', 'BACK_ANGLE_VERTICAL', 'HIP_KNEE_HEIGHT'],
+    ('squat',): ['KNEE_ANGLE', 'BACK_ANGLE_VERTICAL', 'SQUAT_DEPTH_CHECK'],
     ('t bar row',): ['ELBOW_ANGLE', 'BACK_ANGLE_HORIZONTAL', 'NECK_ALIGNMENT'],
     ('tricep dips',): ['ELBOW_ANGLE', 'TORSO_LEAN', 'SHOULDER_ELBOW_DEPTH'],
     ('tricep pushdown',): ['ELBOW_ANGLE', 'ELBOW_PIN']
