@@ -15,56 +15,65 @@ def test_exercise(video_path, exercise_name, references):
         return
 
     ref = references[exercise_name]
-    angle_configs = ref['angle_configs']
+    metric_configs = ref.get('angle_configs', {})
     
     print(f"Testing {exercise_name}...")
     
-    result = process_video_for_reference((video_path, exercise_name, angle_configs))
+    # Run the video processing
+    result = process_video_for_reference((video_path, exercise_name, metric_configs))
     
     if not result:
         print("Could not process video.")
         return
 
     print("\n--- Analysis Results ---")
-    
-    # 1. Geometric Form Feedback (from rules)
-    if 'feedback' in result and result['feedback']:
+
+    feedback_set = set()
+    for metric_name, config in metric_configs.items():
+        metric_type = config.get('type', 'angle')
+        
+        if metric_type == 'angle':
+            tolerance = 15.0 # Degrees
+        else:
+            tolerance = 0.05 # Units
+            
+        msg_high = config.get('message_high')
+        msg_low = config.get('message_low')
+
+        for side in ['left', 'right']:
+            # Get Measured Values
+            meas_min = result.get(f"{metric_name}_{side.lower()}_min")
+            meas_max = result.get(f"{metric_name}_{side.lower()}_max")
+            
+            # Get Reference Values
+            ref_min = ref.get(f"{metric_name}_min")
+            ref_max = ref.get(f"{metric_name}_max")
+
+            if meas_min is None or ref_min is None:
+                continue
+
+            # Compare Ranges
+            
+            # Check 1: Min Comparison
+            if meas_min > (ref_min + tolerance):
+                if msg_high: feedback_set.add(f"[{side.upper()}] {msg_high} (Min val {meas_min:.2f} > {ref_min:.2f})")
+            
+            elif meas_min < (ref_min - tolerance):
+                if msg_low: feedback_set.add(f"[{side.upper()}] {msg_low} (Min val {meas_min:.2f} < {ref_min:.2f})")
+
+            # Check 2: Max Comparison
+            if meas_max > (ref_max + tolerance):
+                if msg_high: feedback_set.add(f"[{side.upper()}] {msg_high} (Max val {meas_max:.2f} > {ref_max:.2f})")
+            
+            elif meas_max < (ref_max - tolerance):
+                if msg_low: feedback_set.add(f"[{side.upper()}] {msg_low} (Max val {meas_max:.2f} < {ref_max:.2f})")
+
+    if feedback_set:
         print("\n[Form Feedback]")
-        for item in result['feedback']:
+        for item in sorted(list(feedback_set)):
             print(f"- {item}")
     else:
-        print("\n[Form Feedback] No specific form faults detected.")
-
-    # 2. Angle Range Feedback (ROM)
-    print("\n[Range of Motion Check]")
-    if 'angle_configs' in ref:
-        for angle_name in ref['angle_configs']:
-            for side in ['left', 'right']:
-                min_key = f"{angle_name}_{side}_min"
-                max_key = f"{angle_name}_{side}_max"
-                
-                measured_min = result.get(min_key)
-                measured_max = result.get(max_key)
-                
-                if measured_min is None:
-                    continue
-                    
-                # Get Reference Values
-                ref_min = ref.get(f"{angle_name}_min")
-                ref_max = ref.get(f"{angle_name}_max")
-                
-                if ref_min is not None and ref_max is not None:
-                    tolerance = 15.0 # Degrees
-                    
-                    # Check Min (Deepest point / Flexion usually)
-                    if measured_min > (ref_min + tolerance):
-                        print(f"[{side.upper()} {angle_name}] Issue: Value too high (Min: {measured_min:.1f}, Target: ~{ref_min:.1f}) -> Try to go deeper/flex more.")
-                    
-                    # Check Max (Extension usually)
-                    elif measured_max < (ref_max - tolerance):
-                         print(f"[{side.upper()} {angle_name}] Issue: Value too low (Max: {measured_max:.1f}, Target: ~{ref_max:.1f}) -> Extend more.")
-                    else:
-                        pass
+        print("\n[Form Feedback] Good form! No significant deviations detected.")
 
 if __name__ == "__main__":
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -73,5 +82,9 @@ if __name__ == "__main__":
     
     if references:
         VIDEO_PATH = os.path.abspath(os.path.join(BASE_DIR, '../Data/lat pulldown/lat pulldown_2.mp4'))
-        test_exercise(VIDEO_PATH, 'lat pulldown', references)
-        print("Inference script ready.")
+        if os.path.exists(VIDEO_PATH):
+            test_exercise(VIDEO_PATH, 'lat pulldown', references)
+        else:
+            print("Video not found. Please check paths.")
+    else:
+        print("No references loaded. Run analysis.py first.")

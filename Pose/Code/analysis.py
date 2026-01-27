@@ -11,42 +11,128 @@ from concurrent.futures import ProcessPoolExecutor
 from tqdm import tqdm
 from process_video_for_reference import process_video_for_reference, init_worker
 
-# Groups of aliases for the same joint combinations
+# Format: { 'names': [...], 'type': 'angle'|'horizontal_distance'|'vertical_distance'|'distance_from_line', 'joints': [...] }
 _JOINT_GROUPS = {
-    ('ELBOW_ANGLE', 'ELBOW_BEND'): ['shoulder', 'elbow', 'wrist'],
-    ('SHOULDER_SWING', 'ELBOW_PIN'): ['vertical', 'shoulder', 'elbow'],
-    ('HIP_EXTENSION', 'TORSO_STABILITY', 'HIP_HIKE'): ['shoulder', 'hip', 'knee'],
-    ('TORSO_SWING', 'TORSO_LEAN', 'TORSO_ARCH', 'BACK_ANGLE_VERTICAL'): ['vertical', 'hip', 'shoulder'],
-    ('SHIN_ANGLE',): ['vertical', 'ankle', 'knee'],
-    ('SHOULDER_ABDUCTION','ELBOW_FLARE'): ['hip', 'shoulder', 'elbow'],
-    ('KNEE_ANGLE',): ['hip', 'knee', 'ankle'],
-    ('BODY_LINE',): ['shoulder', 'hip', 'ankle'],
-    ('BODY_SWING',): ['vertical', 'shoulder', 'hip'],
-    ('BACK_ANGLE_HORIZONTAL',): ['horizontal', 'hip', 'shoulder']
+    ('ELBOW_ANGLE', 'ELBOW_BEND'): {
+        'type': 'angle',
+        'joints': ['shoulder', 'elbow', 'wrist'],
+        'message_high': 'Elbows too straight.',
+        'message_low': 'Elbows bent too much.'
+    },
+    ('SHOULDER_SWING', 'ELBOW_PIN', 'ELBOW_STABILITY'): {
+        'type': 'horizontal_distance',
+        'joints': ['shoulder', 'elbow'],
+        'message_high': 'Keep elbows pinned to your sides!'
+    },
+    ('HIP_EXTENSION', 'TORSO_STABILITY', 'HIP_HIKE'): {
+        'type': 'angle',
+        'joints': ['shoulder', 'hip', 'knee'],
+        'message_high': 'Hips extended too much.',
+        'message_low': 'Hips flexed too much (sitting back?).'
+    },
+    ('TORSO_SWING', 'TORSO_LEAN', 'TORSO_ARCH', 'BACK_ANGLE_VERTICAL'): {
+        'type': 'angle',
+        'joints': ['vertical', 'hip', 'shoulder'],
+        'message_high': 'Leaning back too far.',
+        'message_low': 'Leaning forward too far.'
+    },
+    ('SHIN_ANGLE',): {
+        'type': 'angle',
+        'joints': ['vertical', 'ankle', 'knee'],
+        'message_high': 'Knees tracking too far forward.'
+    },
+    ('SHOULDER_ABDUCTION', 'ELBOW_FLARE'): {
+        'type': 'angle',
+        'joints': ['hip', 'shoulder', 'elbow'],
+        'message_high': 'Elbows flaring out too much.'
+    },
+    ('KNEE_ANGLE', 'SOFT_KNEES', 'LEG_STRAIGHTNESS'): {
+        'type': 'angle',
+        'joints': ['hip', 'knee', 'ankle'],
+        'message_high': 'Legs too straight (Lockout?).',
+        'message_low': 'Bend knees less.'
+    },
+    ('BODY_LINE', 'HIP_SAG'): {
+        'type': 'distance_from_line',
+        'joints': ['hip', 'shoulder', 'ankle'],
+        'message_high': 'Body not straight (Sagging or Piking).'
+    },
+    ('BODY_SWING',): {
+        'type': 'angle',
+        'joints': ['vertical', 'shoulder', 'hip'],
+        'message_high': 'Excessive body swing.'
+    },
+    ('BACK_ANGLE_HORIZONTAL',): {
+        'type': 'angle',
+        'joints': ['horizontal', 'hip', 'shoulder'],
+        'message_high': 'Torso too upright.',
+        'message_low': 'Torso too low.'
+    },
+    ('WRIST_ELBOW_STACK',): {
+        'type': 'horizontal_distance',
+        'joints': ['wrist', 'elbow'],
+        'message_high': 'Stack wrists over elbows (Horizontal drift).'
+    },
+    ('SHOULDER_ELBOW_DEPTH', 'IMPINGEMENT_RISK'): {
+        'type': 'vertical_distance',
+        'joints': ['shoulder', 'elbow'],
+        'message_high': 'Elbows too high relative to shoulders (Impingement risk).'
+    },
+    ('WRIST_ELBOW_HEIGHT',): {
+        'type': 'vertical_distance',
+        'joints': ['wrist', 'elbow'],
+        'message_high': 'Lead with elbows, not wrists.'
+    },
+    ('CHIN_BAR_HEIGHT',): {
+        'type': 'vertical_distance',
+        'joints': ['nose', 'wrist'],
+        'message_low': 'Get your chin over the bar!' # Assuming typical chin (nose) < bar (wrist) Y check
+    },
+    ('NECK_ALIGNMENT',): {
+        'type': 'distance_from_line',
+        'joints': ['nose', 'shoulder', 'hip'],
+        'message_high': 'Keep neck neutral with spine.'
+    },
+    ('HIP_SHOULDER_HEIGHT',): {
+        'type': 'vertical_distance',
+        'joints': ['hip', 'shoulder'],
+        'message_high': 'Hips too high.' # e.g. Deadlift setup
+    },
+    ('HIP_KNEE_HEIGHT',): {
+        'type': 'vertical_distance',
+        'joints': ['hip', 'knee'],
+        'message_high': 'Hips too low.'
+    },
+    ('HIP_ALIGNMENT',): {
+        'type': 'distance_from_line',
+        'joints': ['hip', 'shoulder', 'ankle'],
+        'message_high': 'Align hips with body.'
+    }
 }
 
 # Flatten into the lookup dictionary
-JOINT_DEFINITIONS = {name: joints for names, joints in _JOINT_GROUPS.items() for name in names}
+JOINT_DEFINITIONS = {name: config for names, config in _JOINT_GROUPS.items() for name in names}
 
 # Group exercises with identical configurations
 _EXERCISE_GROUPS = {
-    ('barbell biceps curl', 'hammer curl'): ['ELBOW_ANGLE', 'SHOULDER_SWING'],
-    ('deadlift', 'romanian deadlift'): ['HIP_EXTENSION'],
-    ('bench press',): ['ELBOW_ANGLE', 'ELBOW_FLARE'],
-    ('chest fly machine',): ['ELBOW_ANGLE'],
+    ('barbell biceps curl', 'hammer curl'): ['ELBOW_ANGLE', 'ELBOW_PIN'],
+    ('deadlift',): ['HIP_EXTENSION', 'HIP_SHOULDER_HEIGHT', 'HIP_KNEE_HEIGHT'],
+    ('romanian deadlift',): ['HIP_EXTENSION', 'SOFT_KNEES', 'NECK_ALIGNMENT'],
+    ('bench press',): ['ELBOW_ANGLE', 'ELBOW_FLARE', 'WRIST_ELBOW_STACK'],
+    ('chest fly machine',): ['ELBOW_BEND'],
     ('hip thrust',): ['HIP_EXTENSION', 'SHIN_ANGLE'],
     ('lat pulldown',): ['ELBOW_ANGLE', 'TORSO_SWING'],
-    ('lateral raise',): ['SHOULDER_ABDUCTION', 'ELBOW_BEND'],
+    ('lateral raise',): ['SHOULDER_ABDUCTION', 'ELBOW_BEND', 'IMPINGEMENT_RISK', 'WRIST_ELBOW_HEIGHT'],
     ('leg extension',): ['KNEE_ANGLE', 'TORSO_STABILITY'],
-    ('leg raises',): ['HIP_EXTENSION', 'KNEE_ANGLE'],
-    ('plank',): ['BODY_LINE', 'HIP_HIKE'],
-    ('pull up',): ['ELBOW_ANGLE', 'BODY_SWING'],
+    ('leg raises',): ['HIP_EXTENSION', 'LEG_STRAIGHTNESS'],
+    ('plank',): ['BODY_LINE'],
+    ('pull up',): ['ELBOW_ANGLE', 'BODY_SWING', 'CHIN_BAR_HEIGHT'],
     ('push-up',): ['ELBOW_ANGLE', 'BODY_LINE'],
     ('russian twist',): ['HIP_EXTENSION', 'TORSO_LEAN'],
-    ('shoulder press',): ['ELBOW_ANGLE', 'TORSO_ARCH'],
-    ('squat',): ['KNEE_ANGLE', 'BACK_ANGLE_VERTICAL'],
-    ('t bar row',): ['ELBOW_ANGLE', 'BACK_ANGLE_HORIZONTAL'],
-    ('tricep dips',): ['ELBOW_ANGLE', 'TORSO_LEAN'],
+    ('shoulder press',): ['ELBOW_ANGLE', 'TORSO_ARCH', 'WRIST_ELBOW_STACK'],
+    ('squat',): ['KNEE_ANGLE', 'BACK_ANGLE_VERTICAL', 'HIP_KNEE_HEIGHT'],
+    ('t bar row',): ['ELBOW_ANGLE', 'BACK_ANGLE_HORIZONTAL', 'NECK_ALIGNMENT'],
+    ('tricep dips',): ['ELBOW_ANGLE', 'TORSO_LEAN', 'SHOULDER_ELBOW_DEPTH'],
     ('tricep pushdown',): ['ELBOW_ANGLE', 'ELBOW_PIN']
 }
 
@@ -116,7 +202,7 @@ def analyze_dataset(dataset_path, output_json='exercise_reference_angles.json', 
                 reconstructed_config[def_name] = JOINT_DEFINITIONS[def_name]
             ref_data = {'angle_configs': reconstructed_config}
             
-            # Calculate stats for min, max using simple mean of both sides
+            # Calculate stats for min, max
             for def_name in config_list:
                 for stat in ['min', 'max']:
                     target_cols = [f"{def_name}_left_{stat}", f"{def_name}_right_{stat}"]
@@ -125,6 +211,11 @@ def analyze_dataset(dataset_path, output_json='exercise_reference_angles.json', 
                     if valid_cols:
                         mean_val = group[valid_cols].stack().mean()
                         ref_data[f"{def_name}_{stat}"] = float(mean_val)
+                        
+                        # Store SD to help with thresholding
+                        std_val = group[valid_cols].stack().std()
+                        if pd.notna(std_val):
+                             ref_data[f"{def_name}_std"] = float(std_val)
 
             references[name] = ref_data
             
