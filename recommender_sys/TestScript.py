@@ -1,7 +1,9 @@
-from filters import recommend_workouts
+from filters import recommend_workouts, score_workout
 from workouts import WorkoutItem
 from user_profile import UserProfile
 
+
+# ---------------- Fake workouts ----------------
 workouts = [
     WorkoutItem(
         workout_id="w1",
@@ -32,15 +34,6 @@ workouts = [
     ),
     WorkoutItem(
         workout_id="w4",
-        name="Burpees",
-        workout_type="Plyometrics",
-        body_part="Full Body",
-        equipment="Body Only",
-        level="Intermediate",
-        rating=4.0
-    ),
-    WorkoutItem(
-        workout_id="w5",
         name="Stretch Routine",
         workout_type="Stretching",
         body_part="Hamstrings",
@@ -48,8 +41,19 @@ workouts = [
         level="Beginner",
         rating=None
     ),
+    WorkoutItem(
+        workout_id="w5",
+        name="Bench Press",
+        workout_type="Strength",
+        body_part="Chest",
+        equipment="Body Only",
+        level="Beginner",
+        rating=4.6
+    ),
 ]
 
+
+# ---------------- Fake user ----------------
 user = UserProfile(
     age=23,
     height_cm=175,
@@ -60,21 +64,36 @@ user = UserProfile(
     available_equipment=["Body Only"]
 )
 
-if __name__ == "__main__":
-    initial_recs = recommend_workouts(workouts, user, top_k=5)
 
-    print("Recommendations BEFORE feedback:")
-    for w in initial_recs:
-        print(w.name, "-", w.workout_type)
+# ---------------- BEFORE feedback ----------------
+print("Recommendations BEFORE feedback:")
+before = recommend_workouts(workouts, user, top_k=5)
+for w in before:
+    print(w.name, "-", w.workout_type)
+
+print("\nWorkout scores before feedback:")
+for w in workouts:
+    print(w.name, "=>", round(score_workout(w, user), 2))
 
 
-    user.add_workout_feedback(workouts[0], liked=True)   # Push Ups
-    user.add_workout_feedback(workouts[2], liked=True)   # Squats
-    user.add_workout_feedback(workouts[1], liked=False)  # Jump Rope
+# ---------------- Feedback ----------------
+# User REALLY dislikes Squats
+user.add_workout_feedback(workouts[2], liked=False)
+user.add_workout_feedback(workouts[2], liked=False)
+user.add_workout_feedback(workouts[2], liked=False)
+
+# User likes Push Ups
+user.add_workout_feedback(workouts[0], liked=True)
 
 
-    updated_recs = recommend_workouts(workouts, user, top_k=5)
+# ---------------- AFTER feedback ----------------
+print("\nRecommendations AFTER feedback:")
+after = recommend_workouts(workouts, user, top_k=5)
+for w in after:
+    print(w.name, "-", w.workout_type)
 
-    print("\nRecommendations AFTER feedback:")
-    for w in updated_recs:
-        print(w.name, "-", w.workout_type)
+
+# ---------------- Debug: show scores ----------------
+print("\nWorkout scores AFTER feedback:")
+for w in workouts:
+    print(w.name, "=>", round(score_workout(w, user), 2))
