@@ -52,17 +52,17 @@ def hard_filter_workouts(workouts, user):
 def score_workout(workout, user):
     score = 0.0
 
-    # 1. Goal-based score
+    # Goal-based score
     goal_weights = GOAL_TYPE_WEIGHTS.get(user.goal_type, {})
     score += goal_weights.get(workout.workout_type, 0.5)
 
-    # 2. Feedback-based adjustment
-    feedback_pref = user.workout_type_preferences.get(
-        workout.workout_type, 0
-    )
-    score += FEEDBACK_WEIGHT * feedback_pref
+    # Workout-specific feedback (strong)
+    score += user.workout_preferences.get(workout.workout_id, 0) * 0.7
 
-    # 3. Rating bonus
+    # Workout-type preference (weak)
+    score += user.workout_type_preferences.get(workout.workout_type, 0)
+
+    # Rating bonus
     if workout.rating is not None:
         score += 0.2 * workout.rating
 

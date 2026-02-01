@@ -50,8 +50,12 @@ class UserProfile:
     # ---- Feedback memory ----
     liked_workouts: List[str] = field(default_factory=list)
     disliked_workouts: List[str] = field(default_factory=list)
+    # inside UserProfile
+    workout_preferences: dict = field(default_factory=dict)
     workout_type_preferences: dict = field(
-    default_factory=lambda: defaultdict(int))
+    default_factory=lambda: defaultdict(float)
+)
+
     liked_meals: List[str] = field(default_factory=list)
     disliked_meals: List[str] = field(default_factory=list)
     
@@ -63,12 +67,15 @@ class UserProfile:
         self.goal_type = new_goal
 
     def add_workout_feedback(self, workout, liked: bool):
-        if liked:
-            self.liked_workouts.append(workout.workout_id)
-            self.workout_type_preferences[workout.workout_type] += 1
-        else:
-            self.disliked_workouts.append(workout.workout_id)
-            self.workout_type_preferences[workout.workout_type] -= 1
+        delta = 1 if liked else -1
+
+        # workout-specific preference (strong)
+        self.workout_preferences[workout.workout_id] = (
+            self.workout_preferences.get(workout.workout_id, 0) + delta
+        )
+
+        # workout-type preference (weak)
+        self.workout_type_preferences[workout.workout_type] += 0.3 * delta
 
 
     def add_meal_feedback(self, meal_id: str, liked: bool):
