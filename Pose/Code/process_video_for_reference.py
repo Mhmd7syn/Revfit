@@ -218,3 +218,112 @@ def process_video_for_reference(args):
     if has_data:
         return result
     return None
+
+def process_frame(frame, metric_configs):
+    """
+    Process a single frame to extract current metric values for real-time inference.
+    Unlike process_video_for_reference which returns min/max, this returns current values.
+    
+    Args:
+        frame: A single BGR image frame (numpy array from cv2)
+        metric_configs: dict of {metric_name: {'type': '...', 'joints': [...]}}
+    
+    Returns:
+        dict with current values for each metric and side, e.g.:
+        {'elbow_angle_left': 45.2, 'elbow_angle_right': 47.8, ...}
+        Returns None if no pose detected or no data extracted.
+    """
+    global POSE_MODEL
+    if POSE_MODEL is None:
+        init_worker()
+        
+    pose = POSE_MODEL
+    
+    # Convert to RGB
+    image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    image.flags.writeable = False
+    
+    with suppress_c_logging():
+        results = pose.process(image)
+    
+    if not results.pose_landmarks:
+        return None
+    
+    landmarks = results.pose_landmarks.landmark
+    frame_keypoints = {'LEFT': {}, 'RIGHT': {}}
+    
+    # Global/Central points
+    nose_idx = MP_POSE.PoseLandmark.NOSE
+    nose_coords = None
+    if landmarks[nose_idx].visibility > 0.5:
+        nose_coords = np.array([landmarks[nose_idx].x, landmarks[nose_idx].y])
+
+    target_joints = ['shoulder', 'elbow', 'wrist', 'hip', 'knee', 'ankle']
+    
+    for side in ['LEFT', 'RIGHT']:
+        for name in target_joints:
+            coords = get_landmark_coords(landmarks, name, side)
+            if coords is not None:
+                frame_keypoints[side][name] = coords
+        # Add nose to each side for convenience in checks
+        if nose_coords is not None:
+            frame_keypoints[side]['nose'] = nose_coords
+
+    # Calculate Metrics from Config  
+    result = {}
+    
+    for metric_name, config in metric_configs.items():
+        metric_type = config.get('type', 'angle')
+        joints = config.get('joints', [])
+        
+        for side in ['LEFT', 'RIGHT']:
+            points = []
+            valid_side = True
+            
+            for j in joints:
+                if j in ['vertical', 'horizontal']:
+                    points.append(j)
+                elif j in frame_keypoints[side]:
+                    points.append(frame_keypoints[side][j])
+                else:
+                    valid_side = False
+                    break
+            
+            if not valid_side:
+                continue
+                
+            # Perform Calculation based on Type
+            value = None
+            if metric_type == 'angle':
+                if len(points) == 3:
+                    p0, p1, p2 = points[0], points[1], points[2]
+                    
+                    if isinstance(p0, str):
+                        if p0 == 'vertical': p0 = np.array([p1[0], p1[1] - 0.5])
+                        elif p0 == 'horizontal': p0 = np.array([p1[0] + 0.5, p1[1]])
+                    
+                    if isinstance(p2, str):
+                        if p2 == 'vertical': p2 = np.array([p1[0], p1[1] - 0.5])
+                        elif p2 == 'horizontal': p2 = np.array([p1[0] + 0.5, p1[1]])
+                        
+                    if not isinstance(p0, str) and not isinstance(p1, str) and not isinstance(p2, str):
+                        value = GeometryChecks.calculate_angle(p0, p1, p2)
+
+            elif metric_type == 'horizontal_distance':
+                if len(points) >= 2:
+                    value = GeometryChecks.calculate_horizontal_distance(points[0], points[1])
+                     
+            elif metric_type == 'vertical_distance':
+                if len(points) >= 2:
+                    value = GeometryChecks.calculate_vertical_distance(points[0], points[1])
+
+            elif metric_type == 'distance_from_line':
+                if len(points) == 3:
+                    value = GeometryChecks.distance_from_line(points[0], points[1], points[2])
+            
+            if value is not None:
+                result[f"{metric_name}_{side.lower()}"] = value
+
+    if result:
+        return result
+    return None
