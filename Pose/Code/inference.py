@@ -124,15 +124,13 @@ def test_exercise_frame_by_frame(video_path, exercise_name, references):
                 break
             frame_count += 1
         
-        # Process frame for pose detection
-        image_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        image_rgb.flags.writeable = False
+        # Get current metrics and pose results in one call (optimized to avoid duplicate processing)
+        result_tuple = pvr.process_frame(frame, metric_configs, return_results=True)
         
-        with pvr.suppress_c_logging():
-            results = pvr.POSE_MODEL.process(image_rgb)
-        
-        # Get current metrics for form checking
-        current_metrics = pvr.process_frame(frame, metric_configs)
+        if result_tuple:
+            current_metrics, results = result_tuple
+        else:
+            current_metrics, results = None, None
         
         # Determine form quality
         is_good_form = True
@@ -308,8 +306,8 @@ if __name__ == "__main__":
         VIDEO_PATH = '../TestData/barbell biceps curl/barbell biceps curl_1.mp4'
         VIDEO_ABS_PATH = os.path.abspath(os.path.join(BASE_DIR, VIDEO_PATH))
         if os.path.exists(VIDEO_ABS_PATH):
-            # test_exercise_frame_by_frame(VIDEO_ABS_PATH, 'barbell biceps curl', references)
-            test_exercise(VIDEO_ABS_PATH, 'barbell biceps curl', references)
+            test_exercise_frame_by_frame(VIDEO_ABS_PATH, 'barbell biceps curl', references)
+            # test_exercise(VIDEO_ABS_PATH, 'barbell biceps curl', references)
         else:
             print("Video not found. Please check paths.")
     else:
