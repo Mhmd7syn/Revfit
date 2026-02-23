@@ -1,0 +1,26 @@
+{
+  "liked_meals": [
+    "649407"
+  ],
+  "disliked_meals": [
+    "638316",
+    "642121"
+  ],
+  "liked_workouts": [
+    "w1",
+    "csv_194"
+  ],
+  "disliked_workouts": [
+    "w3",
+    "csv_1367"
+  ],
+  "workout_preferences": {
+    "w1": 1,
+    "w3": -1,
+    "csv_1367": -1,
+    "csv_194": 1
+  },
+  "workout_type_preferences": {
+    "Strength": 0.0
+  }
+}
