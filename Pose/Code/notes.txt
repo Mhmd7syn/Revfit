@@ -1,4 +1,0 @@
-in testing video,
- the whole difference between testing as realtime and testing as video,
- is that in video, we process the whole video and get the min and max values for each metric,
-  while in realtime, we process frame by frame and checks only if the current angle exceeds the thresholds or not.
