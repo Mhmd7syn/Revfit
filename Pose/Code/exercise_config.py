@@ -139,8 +139,8 @@ _EXERCISE_GROUPS = {
         'metrics': ['ELBOW_ANGLE', 'ELBOW_PIN', 'TORSO_SWING', 'ELBOW_FLARE', 'WRIST_ANGLE'],
         'thresholds': {
             'ELBOW_ANGLE_min': 30.0, 'ELBOW_ANGLE_max': 160.0,
-            'ELBOW_PIN_min': 0.0, 'ELBOW_PIN_max': 0.15,  # NASM: elbows stay within ~15% torso-width of sides
-            'TORSO_SWING_min': 0.0, 'TORSO_SWING_max': 15.0,  # NASM: minimal torso swing; <15° is acceptable
+            'ELBOW_PIN_min': 0.0, 'ELBOW_PIN_max': 0.20,  # NASM: elbows stay within ~20% torso-width of sides (loosened from 0.15)
+            'TORSO_SWING_min': 0.0, 'TORSO_SWING_max': 20.0,  # NASM: minimal torso swing; loosened to 20° to reduce false positives
             'ELBOW_FLARE_min': 0.0, 'ELBOW_FLARE_max': 45.0,  # NASM: elbow angle from torso should stay <45°
             'WRIST_ANGLE_min': 105.0, 'WRIST_ANGLE_max': 180.0,  # NASM: neutral wrist; avoid full flexion
         },
@@ -160,7 +160,7 @@ _EXERCISE_GROUPS = {
         'metrics': ['ELBOW_ANGLE', 'ELBOW_FLARE', 'WRIST_ELBOW_STACK'],
         'thresholds': {
             'ELBOW_ANGLE_min': 85.0, 'ELBOW_ANGLE_max': 165.0,
-            'ELBOW_FLARE_min': 45.0, 'ELBOW_FLARE_max': 75.0,
+            'ELBOW_FLARE_min': 45.0, 'ELBOW_FLARE_max': 90.0,  # Loosened from 75°; incline press allows wider flare
             'WRIST_ELBOW_STACK_min': 0.0, 'WRIST_ELBOW_STACK_max': 0.15,
         },
         'source': "NSCA Exercise Technique Manual: Five-point contact, rigid wrists above elbows, avoid extreme flare."
@@ -169,10 +169,10 @@ _EXERCISE_GROUPS = {
         'metrics': ['HIP_EXTENSION', 'KNEE_ANGLE', 'HIP_SHOULDER_HEIGHT', 'HIP_KNEE_HEIGHT_DEADLIFT', 'NECK_ALIGNMENT'],
         'thresholds': {
             'HIP_EXTENSION_min': 50.0, 'HIP_EXTENSION_max': 170.0,
-            'KNEE_ANGLE_min': 85.0, 'KNEE_ANGLE_max': 165.0,
+            'KNEE_ANGLE_min': 85.0, 'KNEE_ANGLE_max': 170.0,  # Loosened max from 165° to allow near-straight knees at lockout
             'HIP_SHOULDER_HEIGHT_min': 0.2, 'HIP_SHOULDER_HEIGHT_max': 1.0,
-            'HIP_KNEE_HEIGHT_DEADLIFT_min': -0.8, 'HIP_KNEE_HEIGHT_DEADLIFT_max': -0.4,
-            'NECK_ALIGNMENT_min': 0.0, 'NECK_ALIGNMENT_max': 0.3,  # NSCA: neutral cervical spine; head in line with torso
+            'HIP_KNEE_HEIGHT_DEADLIFT_min': -1.0, 'HIP_KNEE_HEIGHT_DEADLIFT_max': -0.2,  # Loosened; too many false positives
+            'NECK_ALIGNMENT_min': 0.0, 'NECK_ALIGNMENT_max': 0.5,  # Loosened from 0.3; 2D nose landmark imprecision causes excess flags
         },
         'source': "NSCA Guidelines: Flat back/neutral spine, hips above knees and below shoulders."
     },
@@ -180,8 +180,8 @@ _EXERCISE_GROUPS = {
         'metrics': ['HIP_EXTENSION', 'SOFT_KNEES', 'NECK_ALIGNMENT'],
         'thresholds': {
             'HIP_EXTENSION_min': 50.0, 'HIP_EXTENSION_max': 170.0,
-            'SOFT_KNEES_min': 130.0, 'SOFT_KNEES_max': 170.0,
-            'NECK_ALIGNMENT_min': 0.0, 'NECK_ALIGNMENT_max': 0.3,  # NSCA: neutral cervical spine; head in line with torso
+            'SOFT_KNEES_min': 120.0, 'SOFT_KNEES_max': 175.0,  # Loosened; 'Bend knees less' fires too often
+            'NECK_ALIGNMENT_min': 0.0, 'NECK_ALIGNMENT_max': 0.5,  # Loosened from 0.3; 2D nose landmark imprecision causes excess flags
         },
         'source': "NSCA Guidelines: Hinge at hips with slightly bent 'soft' knees, neutral cervical spine."       
     },
@@ -221,8 +221,8 @@ _EXERCISE_GROUPS = {
     ('hip thrust',): {
         'metrics': ['HIP_EXTENSION', 'SHIN_ANGLE'],
         'thresholds': {
-            'HIP_EXTENSION_min': 100.0, 'HIP_EXTENSION_max': 175.0,
-            'SHIN_ANGLE_min': 0.0, 'SHIN_ANGLE_max': 15.0,
+            'HIP_EXTENSION_min': 90.0, 'HIP_EXTENSION_max': 175.0,  # Loosened min from 100°
+            'SHIN_ANGLE_min': 0.0, 'SHIN_ANGLE_max': 35.0,  # Loosened from 15°; shins rarely perfectly vertical in practice
         },
         'source': "NSCA: Full hip extension, vertical shins at terminal extension."
     },
@@ -281,9 +281,9 @@ _EXERCISE_GROUPS = {
         'metrics': ['ELBOW_ANGLE', 'BACK_ANGLE_HORIZONTAL', 'SOFT_KNEES', 'NECK_ALIGNMENT'],
         'thresholds': {
             'ELBOW_ANGLE_min': 70.0, 'ELBOW_ANGLE_max': 170.0,
-            'BACK_ANGLE_HORIZONTAL_min': 20.0, 'BACK_ANGLE_HORIZONTAL_max': 60.0,  # NSCA: ~45° hinge posture; tolerance handles variation
-            'SOFT_KNEES_min': 130.0, 'SOFT_KNEES_max': 170.0,  # NSCA: soft knees, not locked out and not fully bent
-            'NECK_ALIGNMENT_min': 0.0, 'NECK_ALIGNMENT_max': 0.3,  # NSCA: neutral cervical spine; head in line with torso
+            'BACK_ANGLE_HORIZONTAL_min': 10.0, 'BACK_ANGLE_HORIZONTAL_max': 75.0,  # Loosened from 20-60°; 2D camera makes horizontal angle unreliable
+            'SOFT_KNEES_min': 120.0, 'SOFT_KNEES_max': 175.0,  # Loosened; 'Bend knees less' fires too often
+            'NECK_ALIGNMENT_min': 0.0, 'NECK_ALIGNMENT_max': 0.5,  # Loosened from 0.3; nose landmark imprecision in hinge posture
         },
         'source': "NSCA: Hinge posture, neutral spine & neck, soft knees."
     },
