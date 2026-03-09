@@ -9,7 +9,7 @@ from recipe_Item import RecipeItem
 #  Set your key here or pass it as an argument                        #
 # ------------------------------------------------------------------ #
 
-API_KEY = "HHHHHHHHHHHHHHHHHHHHHHHHHH"   # ← replace with your key
+API_KEY = "04d26d56970d40588c123399020fd0b6"   # ← replace with your key
 BASE_URL = "https://api.spoonacular.com"
 
 

@@ -1,26 +1,111 @@
 {
   "liked_meals": [
-    "649407"
+    "639950"
   ],
   "disliked_meals": [
     "638316",
-    "642121"
+    "642121",
+    "649407",
+    "642893",
+    "647109",
+    "665378",
+    "651832",
+    "645704"
   ],
   "liked_workouts": [
     "w1",
-    "csv_194"
+    "csv_194",
+    "csv_964",
+    "csv_2731"
   ],
   "disliked_workouts": [
     "w3",
-    "csv_1367"
+    "csv_1367",
+    "csv_962"
   ],
-  "workout_preferences": {
-    "w1": 1,
-    "w3": -1,
-    "csv_1367": -1,
-    "csv_194": 1
-  },
+  "workout_preferences": {},
   "workout_type_preferences": {
-    "Strength": 0.0
-  }
+    "Strength": -0.3,
+    "Stretching": 0.3
+  },
+  "workout_events": [
+    {
+      "workout_id": "w1",
+      "workout_type": null,
+      "delta": 1,
+      "ts": "2026-03-09T08:06:50.184020+00:00"
+    },
+    {
+      "workout_id": "w3",
+      "workout_type": null,
+      "delta": -1,
+      "ts": "2026-03-09T08:06:50.184020+00:00"
+    },
+    {
+      "workout_id": "csv_1367",
+      "workout_type": null,
+      "delta": -1,
+      "ts": "2026-03-09T08:06:50.184020+00:00"
+    },
+    {
+      "workout_id": "csv_194",
+      "workout_type": null,
+      "delta": 1,
+      "ts": "2026-03-09T08:06:50.184020+00:00"
+    },
+    {
+      "workout_id": "csv_962",
+      "workout_type": null,
+      "delta": -5,
+      "ts": "2026-03-09T08:06:50.184020+00:00"
+    },
+    {
+      "workout_id": "csv_964",
+      "workout_type": null,
+      "delta": 4,
+      "ts": "2026-03-09T08:06:50.184020+00:00"
+    },
+    {
+      "workout_id": "csv_2731",
+      "workout_type": null,
+      "delta": 1,
+      "ts": "2026-03-09T08:06:50.184020+00:00"
+    },
+    {
+      "workout_id": "csv_962",
+      "workout_type": "Strength",
+      "delta": -1,
+      "ts": "2026-03-09T08:06:50.188569+00:00"
+    },
+    {
+      "workout_id": "csv_2731",
+      "workout_type": "Stretching",
+      "delta": 1,
+      "ts": "2026-03-09T08:06:50.188569+00:00"
+    },
+    {
+      "workout_id": "csv_962",
+      "workout_type": "Strength",
+      "delta": -1,
+      "ts": "2026-03-09T08:52:46.197616+00:00"
+    },
+    {
+      "workout_id": "csv_2731",
+      "workout_type": "Stretching",
+      "delta": 1,
+      "ts": "2026-03-09T08:52:46.197616+00:00"
+    },
+    {
+      "workout_id": "csv_962",
+      "workout_type": "Strength",
+      "delta": -1,
+      "ts": "2026-03-09T08:53:29.956569+00:00"
+    },
+    {
+      "workout_id": "csv_964",
+      "workout_type": "Strength",
+      "delta": 1,
+      "ts": "2026-03-09T08:53:29.956569+00:00"
+    }
+  ]
 }

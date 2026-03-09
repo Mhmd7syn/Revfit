@@ -3,7 +3,8 @@ from typing import List, Optional
 from collections import defaultdict
 from constants import (
     LEVEL_ORDER, GOAL_TYPES, FITNESS_LEVELS, DIET_TYPES, LOCATION_TYPES,
-    LOCATION_TO_CUISINE, ACTIVITY_MULTIPLIERS, GOAL_CALORIE_DELTA
+    LOCATION_TO_CUISINE, ACTIVITY_MULTIPLIERS, GOAL_CALORIE_DELTA,
+    PLAN_TYPES,
 )
 
 
@@ -41,6 +42,7 @@ class UserProfile:
     meals_per_day: int = 3
     cooking_time_preference: str = "flexible"    # quick / flexible
     protein_focus: str = "medium"                # low / medium / high
+    plan_type: str = "full_body"                 # full_body / ppl / upper_lower
 
     # ---- Auto-computed nutrition targets ----
     target_calories: Optional[int] = field(default=None, init=False)

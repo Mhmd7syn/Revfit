@@ -3,12 +3,16 @@ recommender.py — Unified entry point for the Revfit recommender system.
 
 Usage
 -----
-from recommender import recommend
+from recommender import recommend, recommend_muscle
 
 result = recommend(user)
-# result["workouts"]  → List[WorkoutItem]
-# result["meal_plan"] → dict  (slot → List[RecipeItem])
-# result["plan_summary"] → str
+# result["workouts"]      → List[WorkoutItem]  (flat top-K)
+# result["workout_plan"]  → WorkoutPlan        (split-aware, from user.plan_type)
+# result["meal_plan"]     → dict  (slot → List[RecipeItem])
+# result["plan_summary"]  → str
+
+muscle_recs = recommend_muscle(user, muscle="Chest")
+# → List[WorkoutItem] — best Chest exercises for this user
 """
 
 import pandas as pd
@@ -17,7 +21,8 @@ from typing import List, Dict, Any
 from user_profile import UserProfile
 from workouts import WorkoutItem
 from recipe_Item import RecipeItem
-from filters import recommend_workouts, recommend_meals
+from filters import recommend_workouts, recommend_meals, recommend_workout_plan, recommend_by_muscle
+from plan_type import WorkoutPlan, print_workout_plan
 from meal_plan import generate_meal_plan, plan_summary
 from Request_Api import fetch_recipes
 
@@ -75,14 +80,16 @@ def recommend(
     Returns
     -------
     {
-        "workouts":     List[WorkoutItem],
-        "meal_plan":    Dict[str, List[RecipeItem]],
-        "plan_summary": str,
+        "workouts":      List[WorkoutItem],      # flat top-K for backwards compat
+        "workout_plan":  WorkoutPlan,            # structured split (new)
+        "meal_plan":     Dict[str, List[RecipeItem]],
+        "plan_summary":  str,
     }
     """
-    # 1. Workouts
+    # 1. Workouts — flat list (backwards compat) + structured split
     all_workouts = load_workouts(csv_path)
     workouts = recommend_workouts(all_workouts, user, top_k=top_k_workouts)
+    workout_plan = recommend_workout_plan(all_workouts, user)
 
     # 2. Meals — use offline list or fetch from API
     if offline_recipes is not None:
@@ -97,7 +104,36 @@ def recommend(
     summary = plan_summary(plan, user)
 
     return {
-        "workouts": workouts,
-        "meal_plan": plan,
+        "workouts":     workouts,
+        "workout_plan": workout_plan,
+        "meal_plan":    plan,
         "plan_summary": summary,
     }
+
+
+# ------------------------------------------------------------------ #
+#  Muscle-specific query                                              #
+# ------------------------------------------------------------------ #
+
+def recommend_muscle(
+    user,
+    muscle: str,
+    csv_path: str = "megaGymDataset.csv",
+    top_k: int = 5,
+):
+    """
+    Return top-K exercises that target a specific muscle, filtered and
+    scored according to the user's equipment, level, goal, and feedback.
+
+    Parameters
+    ----------
+    user    : UserProfile
+    muscle  : str   e.g. "Chest", "Lats", "Quadriceps" (case-insensitive)
+    top_k   : int   max results to return
+
+    Returns
+    -------
+    List[WorkoutItem]
+    """
+    all_workouts = load_workouts(csv_path)
+    return recommend_by_muscle(all_workouts, user, muscle=muscle, top_k=top_k)

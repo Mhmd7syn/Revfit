@@ -12,7 +12,8 @@ Tests:
 """
 
 import os
-from filters import recommend_workouts, score_workout, recommend_meals
+from filters import recommend_workout_plan, recommend_meals, recommend_by_muscle
+from plan_type import print_workout_plan
 from workouts import WorkoutItem, load_workouts_csv
 from user_profile import UserProfile
 from meal_plan import generate_meal_plan, plan_summary, compute_macro_targets
@@ -44,6 +45,7 @@ user = UserProfile(
     protein_focus="high",
     meals_per_day=3,
     cooking_time_preference="flexible",
+    plan_type="upper_lower",               # full_body / ppl / upper_lower
 )
 
 # Load any persisted feedback from previous runs
@@ -67,38 +69,78 @@ print(f"  Daily macro targets:")
 print(f"    Protein: {macros['protein_g']}g")
 print(f"    Carbs:   {macros['carbs_g']}g")
 print(f"    Fat:     {macros['fat_g']}g")
-print(f"\n{store.summary()}\n")
+print(f"\n{store.summary()}")
+print(store.decay_summary(user))
+print()
 
 
 # ═══════════════════════════════════════════════════════════════════ #
-#  Section 2 — Workout recommender                                    #
+#  Section 2 — Structured workout plan (driven by user.plan_type)     #
 # ═══════════════════════════════════════════════════════════════════ #
 
-print("=" * 52)
-print("  WORKOUT RECOMMENDATIONS (before feedback)")
-print("=" * 52)
-before = recommend_workouts(workouts, user, top_k=5)
-for w in before:
-    print(f"  • {w.name} [{w.workout_type} | {w.body_part}]  score={round(score_workout(w, user), 2)}")
+# plan_type is read directly from the UserProfile — no override needed.
+# Change user.plan_type above to switch between full_body / ppl / upper_lower.
 
-# Workout feedback — use workouts from actual recommended list
-if len(before) >= 2:
-    disliked_w = before[0]
-    liked_w    = before[1]
+print("=" * 52)
+print(f"  WORKOUT PLAN  (plan_type = '{user.plan_type}')")
+print("=" * 52)
+
+workout_plan = recommend_workout_plan(workouts, user)
+print_workout_plan(workout_plan)
+print(f"  {workout_plan.summary()}")
+
+# ── Feedback loop (uses the first two exercises from the plan) ───── #
+all_plan_exercises = [
+    w for exercises in workout_plan.days.values() for w in exercises
+]
+if len(all_plan_exercises) >= 2:
+    disliked_w = all_plan_exercises[0]
+    liked_w    = all_plan_exercises[1]
     print(f"\n  [Feedback] Disliking '{disliked_w.name}' x3, Liking '{liked_w.name}'")
     for _ in range(3):
         user.add_workout_feedback(disliked_w, liked=False)
     user.add_workout_feedback(liked_w, liked=True)
     store.record_workout(disliked_w, liked=False)
     store.record_workout(liked_w, liked=True)
-else:
-    print("\n  [Feedback] Not enough recommendations to test feedback.")
 
-print("\n  WORKOUT RECOMMENDATIONS (after feedback)")
-print("=" * 52)
-after = recommend_workouts(workouts, user, top_k=5)
-for w in after:
-    print(f"  • {w.name} [{w.workout_type} | {w.body_part}]  score={round(score_workout(w, user), 2)}")
+    print(f"\n  WORKOUT PLAN after feedback (plan_type = '{user.plan_type}')")
+    print("=" * 52)
+    updated_plan = recommend_workout_plan(workouts, user)
+    print_workout_plan(updated_plan)
+else:
+    print("\n  [Feedback] Not enough exercises in plan to test feedback.")
+
+
+# ═══════════════════════════════════════════════════════════════════ #
+#  Section 2c — Muscle-specific query                                 #
+# ═══════════════════════════════════════════════════════════════════ #
+
+# Ask for specific muscles — just change the list below.
+# Available: Chest, Lats, Quadriceps, Hamstrings, Glutes,
+#            Shoulders, Triceps, Biceps, Abdominals, Lower Back,
+#            Middle Back, Traps, Calves, Forearms, Abductors, Adductors
+
+MUSCLE_QUERIES = ["Chest", "Lats", "Quadriceps"]
+
+for muscle in MUSCLE_QUERIES:
+    print("=" * 52)
+    print(f"  MUSCLE QUERY — {muscle} (top 5)")
+    print("=" * 52)
+    try:
+        muscle_recs = recommend_by_muscle(workouts, user, muscle=muscle, top_k=5)
+        if not muscle_recs:
+            print(f"  ⚠️  No {muscle} exercises found for your equipment/level.")
+        else:
+            for i, w in enumerate(muscle_recs, start=1):
+                rating_str = f"  ★ {w.rating:.1f}" if w.rating else ""
+                print(
+                    f"  {i}. {w.name}"
+                    f"  [{w.workout_type} | {w.equipment} | {w.level}]"
+                    f"{rating_str}"
+                )
+    except ValueError as e:
+        print(f"  ❌ {e}")
+    print()
 
 
 # ═══════════════════════════════════════════════════════════════════ #
