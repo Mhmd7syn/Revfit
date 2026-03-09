@@ -36,4 +36,4 @@ class GeometryChecks:
         p0 = np.array(p0)
         p1 = np.array(p1)
         p2 = np.array(p2)
-        return np.abs(np.cross(p2 - p1, p1 - p0)) / (np.linalg.norm(p2 - p1) + 1e-6)
+        return float(np.linalg.norm(np.cross(p2 - p1, p1 - p0)) / (np.linalg.norm(p2 - p1) + 1e-6))
