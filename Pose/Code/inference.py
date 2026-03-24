@@ -570,9 +570,9 @@ def format_feedback_summary(feedbacks, fps, frame_skip=0):
 
 if __name__ == "__main__":
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    VIDEO_PATH = "../TestData/squat/squat_2.mp4"
+    VIDEO_PATH = "../TestData/barbell biceps curl/barbell biceps curl_1.mp4"
     VIDEO_ABS_PATH = os.path.abspath(os.path.join(BASE_DIR, VIDEO_PATH))
     if os.path.exists(VIDEO_ABS_PATH):
-        get_inference(VIDEO_ABS_PATH, 'squat')
+        get_inference(VIDEO_ABS_PATH, 'barbell biceps curl')
     else:
         print("Video not found. Please check paths.")
