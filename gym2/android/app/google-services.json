@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1036246170629",
+    "project_id": "revft-1278d",
+    "storage_bucket": "revft-1278d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1036246170629:android:de9234348369755b61706c",
+        "android_client_info": {
+          "package_name": "com.example.gym2"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCB35Mnh-2Wwv6rU7pB25hjCz8ZsUgHaG0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

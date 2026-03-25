@@ -1,0 +1,1007 @@
+{
+    "barbell biceps curl": {
+        "angle_configs": {
+            "ELBOW_ANGLE": {
+                "type": "angle",
+                "joints": [
+                    "shoulder",
+                    "elbow",
+                    "wrist"
+                ],
+                "message_high": "Elbows too straight.",
+                "message_low": "Elbows bent too much.",
+                "hard_max": 175.0
+            },
+            "ELBOW_PIN": {
+                "type": "horizontal_distance",
+                "joints": [
+                    "shoulder",
+                    "elbow"
+                ],
+                "message_high": "Keep elbows pinned to your sides (Horizontal Drift)!"
+            },
+            "TORSO_SWING": {
+                "type": "angle",
+                "joints": [
+                    "vertical",
+                    "hip",
+                    "shoulder"
+                ],
+                "message_high": "Excessive torso lean (swinging or arching).",
+                "message_low": "Torso too upright.",
+                "hard_min": 15.0
+            },
+            "ELBOW_FLARE": {
+                "type": "angle",
+                "joints": [
+                    "hip",
+                    "shoulder",
+                    "elbow"
+                ],
+                "message_high": "Elbows flaring out too much."
+            },
+            "WRIST_ANGLE": {
+                "type": "angle",
+                "joints": [
+                    "elbow",
+                    "wrist",
+                    "index"
+                ],
+                "message_low": "Keep wrists straight. Do not curl or extend them."
+            }
+        },
+        "ELBOW_ANGLE_min": 82.22200576476928,
+        "ELBOW_ANGLE_min_std": 4.123728533969159,
+        "ELBOW_ANGLE_max": 159.5020098948699,
+        "ELBOW_ANGLE_max_std": 1.2557120125127483,
+        "ELBOW_PIN_min": 0.0474615366300703,
+        "ELBOW_PIN_min_std": 0.012739298101650061,
+        "ELBOW_PIN_max": 0.1474390401942454,
+        "ELBOW_PIN_max_std": 0.04903140062535351,
+        "TORSO_SWING_min": 9.81466044973185,
+        "TORSO_SWING_min_std": 7.23755610080359,
+        "TORSO_SWING_max": 17.786833919519164,
+        "TORSO_SWING_max_std": 8.420987140146172,
+        "ELBOW_FLARE_min": 20.077713135793427,
+        "ELBOW_FLARE_min_std": 4.866955304467274,
+        "ELBOW_FLARE_max": 44.39161840260044,
+        "ELBOW_FLARE_max_std": 8.489664471437788,
+        "WRIST_ANGLE_min": 119.07378139288554,
+        "WRIST_ANGLE_min_std": 13.971663034758304,
+        "WRIST_ANGLE_max": 145.41106495192344,
+        "WRIST_ANGLE_max_std": 2.119699424147491
+    },
+    "bench press": {
+        "angle_configs": {
+            "ELBOW_ANGLE": {
+                "type": "angle",
+                "joints": [
+                    "shoulder",
+                    "elbow",
+                    "wrist"
+                ],
+                "message_high": "Elbows too straight.",
+                "message_low": "Elbows bent too much.",
+                "hard_max": 175.0
+            },
+            "ELBOW_FLARE": {
+                "type": "angle",
+                "joints": [
+                    "hip",
+                    "shoulder",
+                    "elbow"
+                ],
+                "message_high": "Elbows flaring out too much."
+            },
+            "WRIST_ELBOW_STACK": {
+                "type": "horizontal_distance",
+                "joints": [
+                    "wrist",
+                    "elbow"
+                ],
+                "message_high": "Stack wrists over elbows (Horizontal Drift)."
+            }
+        },
+        "ELBOW_ANGLE_min": 89.77078774933369,
+        "ELBOW_ANGLE_min_std": 19.116474811765986,
+        "ELBOW_ANGLE_max": 155.054448482869,
+        "ELBOW_ANGLE_max_std": 8.600113971963866,
+        "ELBOW_FLARE_min": 52.37179219905292,
+        "ELBOW_FLARE_min_std": 8.840601463851845,
+        "ELBOW_FLARE_max": 123.3601592104147,
+        "ELBOW_FLARE_max_std": 29.075262808559994,
+        "WRIST_ELBOW_STACK_min": 0.009539134801693643,
+        "WRIST_ELBOW_STACK_min_std": 0.007236359670152093,
+        "WRIST_ELBOW_STACK_max": 0.10364855148304314,
+        "WRIST_ELBOW_STACK_max_std": 0.015922906393433918
+    },
+    "chest fly machine": {
+        "angle_configs": {
+            "ELBOW_BEND": {
+                "type": "angle",
+                "joints": [
+                    "shoulder",
+                    "elbow",
+                    "wrist"
+                ],
+                "message_high": "Elbows too straight.",
+                "message_low": "Elbows bent too much.",
+                "hard_max": 175.0
+            },
+            "SHOULDER_ABDUCTION": {
+                "type": "angle",
+                "joints": [
+                    "hip",
+                    "shoulder",
+                    "elbow"
+                ],
+                "message_high": "Elbows flaring out too much."
+            }
+        },
+        "ELBOW_BEND_min": 105.9515462612582,
+        "ELBOW_BEND_min_std": 10.793790603539318,
+        "ELBOW_BEND_max": 163.2061195953286,
+        "ELBOW_BEND_max_std": 12.341874516829442,
+        "SHOULDER_ABDUCTION_min": 57.76604561342272,
+        "SHOULDER_ABDUCTION_min_std": 8.973206033371119,
+        "SHOULDER_ABDUCTION_max": 78.56757156233024,
+        "SHOULDER_ABDUCTION_max_std": 8.401272502911446
+    },
+    "deadlift": {
+        "angle_configs": {
+            "HIP_EXTENSION": {
+                "type": "angle",
+                "joints": [
+                    "shoulder",
+                    "hip",
+                    "knee"
+                ],
+                "message_high": "Hips extended too much.",
+                "message_low": "Hips flexed too much (sitting back?)."
+            },
+            "KNEE_ANGLE": {
+                "type": "angle",
+                "joints": [
+                    "hip",
+                    "knee",
+                    "ankle"
+                ],
+                "message_high": "Legs too straight (Lockout?).",
+                "message_low": "Bend knees less.",
+                "hard_max": 175.0
+            },
+            "HIP_SHOULDER_HEIGHT": {
+                "type": "vertical_distance",
+                "joints": [
+                    "hip",
+                    "shoulder"
+                ],
+                "message_low": "Hips too high! Lower hips."
+            },
+            "HIP_KNEE_HEIGHT_DEADLIFT": {
+                "type": "vertical_distance",
+                "joints": [
+                    "hip",
+                    "knee"
+                ],
+                "message_high": "Hips too low! Don't squat the deadlift."
+            },
+            "NECK_ALIGNMENT": {
+                "type": "distance_from_line",
+                "joints": [
+                    "nose",
+                    "shoulder",
+                    "hip"
+                ],
+                "message_high": "Keep neck neutral with spine."
+            }
+        },
+        "HIP_EXTENSION_min": 49.02648979233927,
+        "HIP_EXTENSION_min_std": 2.593344555292768,
+        "HIP_EXTENSION_max": 164.16288959920143,
+        "HIP_EXTENSION_max_std": 12.423023282599488,
+        "KNEE_ANGLE_min": 85.15754202270477,
+        "KNEE_ANGLE_min_std": 2.013367167547467,
+        "KNEE_ANGLE_max": 158.4866603543419,
+        "KNEE_ANGLE_max_std": 7.267436056668652,
+        "HIP_SHOULDER_HEIGHT_min": 0.24049158483194874,
+        "HIP_SHOULDER_HEIGHT_min_std": 0.11535913343423368,
+        "HIP_SHOULDER_HEIGHT_max": 0.9376350866689644,
+        "HIP_SHOULDER_HEIGHT_max_std": 0.05542241122179083,
+        "HIP_KNEE_HEIGHT_DEADLIFT_min": -0.7778529720013525,
+        "HIP_KNEE_HEIGHT_DEADLIFT_min_std": 0.08697283032498375,
+        "HIP_KNEE_HEIGHT_DEADLIFT_max": -0.5177680449227346,
+        "HIP_KNEE_HEIGHT_DEADLIFT_max_std": 0.03942526983729098,
+        "NECK_ALIGNMENT_min": 0.06728136685309698,
+        "NECK_ALIGNMENT_min_std": 0.05745549303035133,
+        "NECK_ALIGNMENT_max": 0.558558155390479,
+        "NECK_ALIGNMENT_max_std": 0.036782386869563984
+    },
+    "decline bench press": {
+        "angle_configs": {
+            "ELBOW_ANGLE": {
+                "type": "angle",
+                "joints": [
+                    "shoulder",
+                    "elbow",
+                    "wrist"
+                ],
+                "message_high": "Elbows too straight.",
+                "message_low": "Elbows bent too much.",
+                "hard_max": 175.0
+            },
+            "ELBOW_FLARE": {
+                "type": "angle",
+                "joints": [
+                    "hip",
+                    "shoulder",
+                    "elbow"
+                ],
+                "message_high": "Elbows flaring out too much."
+            },
+            "WRIST_ELBOW_STACK": {
+                "type": "horizontal_distance",
+                "joints": [
+                    "wrist",
+                    "elbow"
+                ],
+                "message_high": "Stack wrists over elbows (Horizontal Drift)."
+            }
+        },
+        "ELBOW_ANGLE_min": 120.97236771501308,
+        "ELBOW_ANGLE_min_std": 48.206818195776236,
+        "ELBOW_ANGLE_max": 167.72289877883046,
+        "ELBOW_ANGLE_max_std": 2.4331655175966316,
+        "ELBOW_FLARE_min": 45.27182461355906,
+        "ELBOW_FLARE_min_std": 10.744048604802202,
+        "ELBOW_FLARE_max": 103.22946264059048,
+        "ELBOW_FLARE_max_std": 37.47749565947075,
+        "WRIST_ELBOW_STACK_min": 0.05985942231075206,
+        "WRIST_ELBOW_STACK_min_std": 0.02535816530401724,
+        "WRIST_ELBOW_STACK_max": 0.33527654815669417,
+        "WRIST_ELBOW_STACK_max_std": 0.26142609879149514
+    },
+    "hammer curl": {
+        "angle_configs": {
+            "ELBOW_ANGLE": {
+                "type": "angle",
+                "joints": [
+                    "shoulder",
+                    "elbow",
+                    "wrist"
+                ],
+                "message_high": "Elbows too straight.",
+                "message_low": "Elbows bent too much.",
+                "hard_max": 175.0
+            },
+            "ELBOW_PIN": {
+                "type": "horizontal_distance",
+                "joints": [
+                    "shoulder",
+                    "elbow"
+                ],
+                "message_high": "Keep elbows pinned to your sides (Horizontal Drift)!"
+            },
+            "TORSO_SWING": {
+                "type": "angle",
+                "joints": [
+                    "vertical",
+                    "hip",
+                    "shoulder"
+                ],
+                "message_high": "Excessive torso lean (swinging or arching).",
+                "message_low": "Torso too upright.",
+                "hard_min": 15.0
+            },
+            "ELBOW_FLARE": {
+                "type": "angle",
+                "joints": [
+                    "hip",
+                    "shoulder",
+                    "elbow"
+                ],
+                "message_high": "Elbows flaring out too much."
+            },
+            "WRIST_ANGLE": {
+                "type": "angle",
+                "joints": [
+                    "elbow",
+                    "wrist",
+                    "index"
+                ],
+                "message_low": "Keep wrists straight. Do not curl or extend them."
+            }
+        },
+        "ELBOW_ANGLE_min": 92.33472026810583,
+        "ELBOW_ANGLE_min_std": 0.2959298985622009,
+        "ELBOW_ANGLE_max": 168.04367537374452,
+        "ELBOW_ANGLE_max_std": 9.6692994686836,
+        "ELBOW_PIN_min": 0.0377262593968833,
+        "ELBOW_PIN_min_std": 0.02506640200708525,
+        "ELBOW_PIN_max": 0.13129842901992578,
+        "ELBOW_PIN_max_std": 0.022025606331208755,
+        "TORSO_SWING_min": 7.331937971091467,
+        "TORSO_SWING_min_std": 2.465067970932458,
+        "TORSO_SWING_max": 16.690187754322682,
+        "TORSO_SWING_max_std": 6.069251083946874,
+        "ELBOW_FLARE_min": 14.99666557742183,
+        "ELBOW_FLARE_min_std": 6.307368886510597,
+        "ELBOW_FLARE_max": 32.40775505631706,
+        "ELBOW_FLARE_max_std": 0.5475406661972627,
+        "WRIST_ANGLE_min": 117.74595467141037,
+        "WRIST_ANGLE_min_std": 9.879273859133004,
+        "WRIST_ANGLE_max": 143.60130029858146,
+        "WRIST_ANGLE_max_std": 1.0975919651740336
+    },
+    "hip thrust": {
+        "angle_configs": {
+            "HIP_EXTENSION": {
+                "type": "angle",
+                "joints": [
+                    "shoulder",
+                    "hip",
+                    "knee"
+                ],
+                "message_high": "Hips extended too much.",
+                "message_low": "Hips flexed too much (sitting back?)."
+            },
+            "SHIN_ANGLE": {
+                "type": "angle",
+                "joints": [
+                    "vertical",
+                    "ankle",
+                    "knee"
+                ],
+                "message_high": "Knees tracking too far forward."
+            }
+        },
+        "HIP_EXTENSION_min": 100.59257291323496,
+        "HIP_EXTENSION_min_std": 8.482860683849466,
+        "HIP_EXTENSION_max": 151.47943154906764,
+        "HIP_EXTENSION_max_std": 8.029718502687977,
+        "SHIN_ANGLE_min": 3.2798342290772347,
+        "SHIN_ANGLE_min_std": 0.21438652068134914,
+        "SHIN_ANGLE_max": 15.3567781240431,
+        "SHIN_ANGLE_max_std": 1.3733503257202115
+    },
+    "incline bench press": {
+        "angle_configs": {
+            "ELBOW_ANGLE": {
+                "type": "angle",
+                "joints": [
+                    "shoulder",
+                    "elbow",
+                    "wrist"
+                ],
+                "message_high": "Elbows too straight.",
+                "message_low": "Elbows bent too much.",
+                "hard_max": 175.0
+            },
+            "ELBOW_FLARE": {
+                "type": "angle",
+                "joints": [
+                    "hip",
+                    "shoulder",
+                    "elbow"
+                ],
+                "message_high": "Elbows flaring out too much."
+            },
+            "WRIST_ELBOW_STACK": {
+                "type": "horizontal_distance",
+                "joints": [
+                    "wrist",
+                    "elbow"
+                ],
+                "message_high": "Stack wrists over elbows (Horizontal Drift)."
+            }
+        },
+        "ELBOW_ANGLE_min": 79.78080617813201,
+        "ELBOW_ANGLE_min_std": 50.67291548635824,
+        "ELBOW_ANGLE_max": 119.68232795193,
+        "ELBOW_ANGLE_max_std": 33.07390791505472,
+        "ELBOW_FLARE_min": 57.98593455525273,
+        "ELBOW_FLARE_min_std": 17.222507950026788,
+        "ELBOW_FLARE_max": 120.0470719743429,
+        "ELBOW_FLARE_max_std": 0.6752236074996344,
+        "WRIST_ELBOW_STACK_min": 0.0781665348816692,
+        "WRIST_ELBOW_STACK_min_std": 0.03308903468247476,
+        "WRIST_ELBOW_STACK_max": 0.23706438885770512,
+        "WRIST_ELBOW_STACK_max_std": 0.07993186703882968
+    },
+    "lat pulldown": {
+        "angle_configs": {
+            "ELBOW_ANGLE": {
+                "type": "angle",
+                "joints": [
+                    "shoulder",
+                    "elbow",
+                    "wrist"
+                ],
+                "message_high": "Elbows too straight.",
+                "message_low": "Elbows bent too much.",
+                "hard_max": 175.0
+            },
+            "TORSO_SWING": {
+                "type": "angle",
+                "joints": [
+                    "vertical",
+                    "hip",
+                    "shoulder"
+                ],
+                "message_high": "Excessive torso lean (swinging or arching).",
+                "message_low": "Torso too upright.",
+                "hard_min": 15.0
+            }
+        },
+        "ELBOW_ANGLE_min": 76.55648889560376,
+        "ELBOW_ANGLE_min_std": 1.0909057795636536,
+        "ELBOW_ANGLE_max": 157.18894356104167,
+        "ELBOW_ANGLE_max_std": 14.365468203072053,
+        "TORSO_SWING_min": 4.936806405507163,
+        "TORSO_SWING_min_std": 3.215821599127085,
+        "TORSO_SWING_max": 12.288633660188736,
+        "TORSO_SWING_max_std": 0.4906854961163586
+    },
+    "lateral raise": {
+        "angle_configs": {
+            "SHOULDER_ABDUCTION": {
+                "type": "angle",
+                "joints": [
+                    "hip",
+                    "shoulder",
+                    "elbow"
+                ],
+                "message_high": "Elbows flaring out too much."
+            },
+            "ELBOW_BEND": {
+                "type": "angle",
+                "joints": [
+                    "shoulder",
+                    "elbow",
+                    "wrist"
+                ],
+                "message_high": "Elbows too straight.",
+                "message_low": "Elbows bent too much.",
+                "hard_max": 175.0
+            },
+            "IMPINGEMENT_RISK": {
+                "type": "vertical_distance",
+                "joints": [
+                    "elbow",
+                    "shoulder"
+                ],
+                "message_low": "Lower elbows slightly to protect shoulders."
+            },
+            "WRIST_ELBOW_HEIGHT": {
+                "type": "vertical_distance",
+                "joints": [
+                    "wrist",
+                    "elbow"
+                ],
+                "message_low": "Lead with elbows, not wrists."
+            }
+        },
+        "SHOULDER_ABDUCTION_min": 24.74002778961623,
+        "SHOULDER_ABDUCTION_min_std": 1.2093609780824437,
+        "SHOULDER_ABDUCTION_max": 95.00028997783983,
+        "SHOULDER_ABDUCTION_max_std": 13.397112542204065,
+        "ELBOW_BEND_min": 142.68590988738893,
+        "ELBOW_BEND_min_std": 26.922621013889643,
+        "ELBOW_BEND_max": 161.09678679368653,
+        "ELBOW_BEND_max_std": 20.079810162503108,
+        "IMPINGEMENT_RISK_min": 0.023795306305631772,
+        "IMPINGEMENT_RISK_min_std": 0.09357090420204063,
+        "IMPINGEMENT_RISK_max": 0.49240704008524017,
+        "IMPINGEMENT_RISK_max_std": 0.08159382840180629,
+        "WRIST_ELBOW_HEIGHT_min": 0.030108462167530554,
+        "WRIST_ELBOW_HEIGHT_min_std": 0.0172514580436963,
+        "WRIST_ELBOW_HEIGHT_max": 0.3241160962755515,
+        "WRIST_ELBOW_HEIGHT_max_std": 0.048983704357086065
+    },
+    "leg extension": {
+        "angle_configs": {
+            "KNEE_ANGLE": {
+                "type": "angle",
+                "joints": [
+                    "hip",
+                    "knee",
+                    "ankle"
+                ],
+                "message_high": "Legs too straight (Lockout?).",
+                "message_low": "Bend knees less.",
+                "hard_max": 175.0
+            },
+            "TORSO_STABILITY": {
+                "type": "angle",
+                "joints": [
+                    "shoulder",
+                    "hip",
+                    "knee"
+                ],
+                "message_high": "Hips extended too much.",
+                "message_low": "Hips flexed too much (sitting back?)."
+            }
+        },
+        "KNEE_ANGLE_min": 87.16521447794663,
+        "KNEE_ANGLE_max": 161.02169458016422,
+        "TORSO_STABILITY_min": 116.17007937160841,
+        "TORSO_STABILITY_max": 126.94995408009727
+    },
+    "leg raises": {
+        "angle_configs": {
+            "HIP_EXTENSION": {
+                "type": "angle",
+                "joints": [
+                    "shoulder",
+                    "hip",
+                    "knee"
+                ],
+                "message_high": "Hips extended too much.",
+                "message_low": "Hips flexed too much (sitting back?)."
+            },
+            "LEG_STRAIGHTNESS": {
+                "type": "angle",
+                "joints": [
+                    "hip",
+                    "knee",
+                    "ankle"
+                ],
+                "message_high": "Legs too straight (Lockout?).",
+                "message_low": "Bend knees less.",
+                "hard_max": 175.0
+            }
+        },
+        "HIP_EXTENSION_min": 72.06234042965798,
+        "HIP_EXTENSION_min_std": 17.153917501062278,
+        "HIP_EXTENSION_max": 163.60456215873168,
+        "HIP_EXTENSION_max_std": 9.042688522442466,
+        "LEG_STRAIGHTNESS_min": 101.69238457467524,
+        "LEG_STRAIGHTNESS_min_std": 10.477044310117554,
+        "LEG_STRAIGHTNESS_max": 155.7802674268181,
+        "LEG_STRAIGHTNESS_max_std": 5.276988016979817
+    },
+    "plank": {
+        "angle_configs": {
+            "BODY_LINE": {
+                "type": "distance_from_line",
+                "joints": [
+                    "hip",
+                    "shoulder",
+                    "ankle"
+                ],
+                "message_high": "Body not straight (Sagging or Piking)."
+            }
+        },
+        "BODY_LINE_min": 0.0016855096320125573,
+        "BODY_LINE_min_std": 7.310293452244705e-05,
+        "BODY_LINE_max": 0.2226729080794367,
+        "BODY_LINE_max_std": 0.027625766410760467
+    },
+    "pull up": {
+        "angle_configs": {
+            "ELBOW_ANGLE": {
+                "type": "angle",
+                "joints": [
+                    "shoulder",
+                    "elbow",
+                    "wrist"
+                ],
+                "message_high": "Elbows too straight.",
+                "message_low": "Elbows bent too much.",
+                "hard_max": 175.0
+            },
+            "BODY_SWING": {
+                "type": "angle",
+                "joints": [
+                    "shoulder",
+                    "hip",
+                    "vertical"
+                ],
+                "message_high": "Excessive body swing (keep still)."
+            },
+            "CHIN_BAR_HEIGHT": {
+                "type": "vertical_distance",
+                "joints": [
+                    "nose",
+                    "wrist"
+                ],
+                "message_high": "Get your chin over the bar!"
+            }
+        },
+        "ELBOW_ANGLE_min": 47.401357179524254,
+        "ELBOW_ANGLE_min_std": 1.0536392570951392,
+        "ELBOW_ANGLE_max": 148.79917353872344,
+        "ELBOW_ANGLE_max_std": 16.487767463874437,
+        "BODY_SWING_min": 6.9317018212038715,
+        "BODY_SWING_min_std": 0.9257252062144983,
+        "BODY_SWING_max": 57.20339848511048,
+        "BODY_SWING_max_std": 8.649551903870918,
+        "CHIN_BAR_HEIGHT_min": -0.3596856118589871,
+        "CHIN_BAR_HEIGHT_min_std": 0.08182775515558578,
+        "CHIN_BAR_HEIGHT_max": 0.5126491480944955,
+        "CHIN_BAR_HEIGHT_max_std": 0.007954665992538544
+    },
+    "push-up": {
+        "angle_configs": {
+            "ELBOW_ANGLE": {
+                "type": "angle",
+                "joints": [
+                    "shoulder",
+                    "elbow",
+                    "wrist"
+                ],
+                "message_high": "Elbows too straight.",
+                "message_low": "Elbows bent too much.",
+                "hard_max": 175.0
+            },
+            "ELBOW_FLARE": {
+                "type": "angle",
+                "joints": [
+                    "hip",
+                    "shoulder",
+                    "elbow"
+                ],
+                "message_high": "Elbows flaring out too much."
+            },
+            "BODY_LINE": {
+                "type": "distance_from_line",
+                "joints": [
+                    "hip",
+                    "shoulder",
+                    "ankle"
+                ],
+                "message_high": "Body not straight (Sagging or Piking)."
+            }
+        },
+        "ELBOW_ANGLE_min": 94.04224456220388,
+        "ELBOW_ANGLE_min_std": 3.73497063544216,
+        "ELBOW_ANGLE_max": 142.38480218088466,
+        "ELBOW_ANGLE_max_std": 7.830175371817509,
+        "ELBOW_FLARE_min": 39.58489430712196,
+        "ELBOW_FLARE_min_std": 11.083141688768077,
+        "ELBOW_FLARE_max": 79.0096277704838,
+        "ELBOW_FLARE_max_std": 6.411425378720787,
+        "BODY_LINE_min": 0.02821058064582848,
+        "BODY_LINE_min_std": 0.038712905442513094,
+        "BODY_LINE_max": 0.242862197764263,
+        "BODY_LINE_max_std": 0.031046078326789982
+    },
+    "romanian deadlift": {
+        "angle_configs": {
+            "HIP_EXTENSION": {
+                "type": "angle",
+                "joints": [
+                    "shoulder",
+                    "hip",
+                    "knee"
+                ],
+                "message_high": "Hips extended too much.",
+                "message_low": "Hips flexed too much (sitting back?)."
+            },
+            "SOFT_KNEES": {
+                "type": "angle",
+                "joints": [
+                    "hip",
+                    "knee",
+                    "ankle"
+                ],
+                "message_high": "Legs too straight (Lockout?).",
+                "message_low": "Bend knees less.",
+                "hard_max": 175.0
+            },
+            "NECK_ALIGNMENT": {
+                "type": "distance_from_line",
+                "joints": [
+                    "nose",
+                    "shoulder",
+                    "hip"
+                ],
+                "message_high": "Keep neck neutral with spine."
+            }
+        },
+        "HIP_EXTENSION_min": 52.846991184462695,
+        "HIP_EXTENSION_min_std": 6.61452457212687,
+        "HIP_EXTENSION_max": 158.79565005661257,
+        "HIP_EXTENSION_max_std": 14.064530938684266,
+        "SOFT_KNEES_min": 121.60370547257055,
+        "SOFT_KNEES_min_std": 12.39385192412199,
+        "SOFT_KNEES_max": 162.69761087824529,
+        "SOFT_KNEES_max_std": 10.920403374977337,
+        "NECK_ALIGNMENT_min": 0.015059042424913526,
+        "NECK_ALIGNMENT_min_std": 0.0011631049120982568,
+        "NECK_ALIGNMENT_max": 0.5667024708645123,
+        "NECK_ALIGNMENT_max_std": 0.07609663610790454
+    },
+    "russian twist": {
+        "angle_configs": {
+            "HIP_EXTENSION": {
+                "type": "angle",
+                "joints": [
+                    "shoulder",
+                    "hip",
+                    "knee"
+                ],
+                "message_high": "Hips extended too much.",
+                "message_low": "Hips flexed too much (sitting back?)."
+            },
+            "TORSO_LEAN": {
+                "type": "angle",
+                "joints": [
+                    "vertical",
+                    "hip",
+                    "shoulder"
+                ],
+                "message_high": "Excessive torso lean (swinging or arching).",
+                "message_low": "Torso too upright.",
+                "hard_min": 15.0
+            }
+        },
+        "HIP_EXTENSION_min": 54.85175837227298,
+        "HIP_EXTENSION_min_std": 4.063536425497124,
+        "HIP_EXTENSION_max": 111.29472745130525,
+        "HIP_EXTENSION_max_std": 44.80856544184106,
+        "TORSO_LEAN_min": 18.764324856383304,
+        "TORSO_LEAN_min_std": 1.9687002142009413,
+        "TORSO_LEAN_max": 96.7881092200272,
+        "TORSO_LEAN_max_std": 10.078359574296016
+    },
+    "shoulder press": {
+        "angle_configs": {
+            "ELBOW_ANGLE": {
+                "type": "angle",
+                "joints": [
+                    "shoulder",
+                    "elbow",
+                    "wrist"
+                ],
+                "message_high": "Elbows too straight.",
+                "message_low": "Elbows bent too much.",
+                "hard_max": 175.0
+            },
+            "TORSO_ARCH": {
+                "type": "angle",
+                "joints": [
+                    "vertical",
+                    "hip",
+                    "shoulder"
+                ],
+                "message_high": "Excessive torso lean (swinging or arching).",
+                "message_low": "Torso too upright.",
+                "hard_min": 15.0
+            },
+            "WRIST_ELBOW_STACK": {
+                "type": "horizontal_distance",
+                "joints": [
+                    "wrist",
+                    "elbow"
+                ],
+                "message_high": "Stack wrists over elbows (Horizontal Drift)."
+            }
+        },
+        "ELBOW_ANGLE_min": 46.26854470474142,
+        "ELBOW_ANGLE_min_std": 29.145330527866335,
+        "ELBOW_ANGLE_max": 144.45462600254996,
+        "ELBOW_ANGLE_max_std": 13.701843228857403,
+        "TORSO_ARCH_min": 10.072096763502442,
+        "TORSO_ARCH_min_std": 2.7412103324975647,
+        "TORSO_ARCH_max": 20.280266280353217,
+        "TORSO_ARCH_max_std": 3.3390212153215444,
+        "WRIST_ELBOW_STACK_min": 0.003704713940733399,
+        "WRIST_ELBOW_STACK_min_std": 0.0019686661668545224,
+        "WRIST_ELBOW_STACK_max": 0.07854475276417737,
+        "WRIST_ELBOW_STACK_max_std": 0.027171001101610477
+    },
+    "squat": {
+        "angle_configs": {
+            "KNEE_ANGLE": {
+                "type": "angle",
+                "joints": [
+                    "hip",
+                    "knee",
+                    "ankle"
+                ],
+                "message_high": "Legs too straight (Lockout?).",
+                "message_low": "Bend knees less.",
+                "hard_max": 175.0
+            },
+            "HIP_EXTENSION": {
+                "type": "angle",
+                "joints": [
+                    "shoulder",
+                    "hip",
+                    "knee"
+                ],
+                "message_high": "Hips extended too much.",
+                "message_low": "Hips flexed too much (sitting back?)."
+            },
+            "BACK_ANGLE_VERTICAL": {
+                "type": "angle",
+                "joints": [
+                    "vertical",
+                    "hip",
+                    "shoulder"
+                ],
+                "message_high": "Excessive torso lean (swinging or arching).",
+                "message_low": "Torso too upright.",
+                "hard_min": 15.0
+            },
+            "SQUAT_DEPTH_CHECK": {
+                "type": "vertical_distance",
+                "joints": [
+                    "hip",
+                    "knee"
+                ],
+                "message_high": "Squatting too deep (past safe limit)!"
+            }
+        },
+        "KNEE_ANGLE_min": 81.55064195714606,
+        "KNEE_ANGLE_min_std": 44.3610049562858,
+        "KNEE_ANGLE_max": 163.85134366334194,
+        "KNEE_ANGLE_max_std": 7.521993656356688,
+        "HIP_EXTENSION_min": 84.17073784459025,
+        "HIP_EXTENSION_min_std": 39.18614354010286,
+        "HIP_EXTENSION_max": 158.4331878174243,
+        "HIP_EXTENSION_max_std": 1.3884527144147192,
+        "BACK_ANGLE_VERTICAL_min": 6.633868217988589,
+        "BACK_ANGLE_VERTICAL_min_std": 2.1153515128951885,
+        "BACK_ANGLE_VERTICAL_max": 74.5133094316865,
+        "BACK_ANGLE_VERTICAL_max_std": 23.630834371891947,
+        "SQUAT_DEPTH_CHECK_min": -1.0186442197212537,
+        "SQUAT_DEPTH_CHECK_min_std": 0.26573829007364613,
+        "SQUAT_DEPTH_CHECK_max": -0.02185305839165652,
+        "SQUAT_DEPTH_CHECK_max_std": 0.6117667112909813
+    },
+    "t bar row": {
+        "angle_configs": {
+            "ELBOW_ANGLE": {
+                "type": "angle",
+                "joints": [
+                    "shoulder",
+                    "elbow",
+                    "wrist"
+                ],
+                "message_high": "Elbows too straight.",
+                "message_low": "Elbows bent too much.",
+                "hard_max": 175.0
+            },
+            "BACK_ANGLE_HORIZONTAL": {
+                "type": "angle",
+                "joints": [
+                    "horizontal",
+                    "hip",
+                    "shoulder"
+                ],
+                "message_high": "Torso too upright.",
+                "message_low": "Torso too low."
+            },
+            "SOFT_KNEES": {
+                "type": "angle",
+                "joints": [
+                    "hip",
+                    "knee",
+                    "ankle"
+                ],
+                "message_high": "Legs too straight (Lockout?).",
+                "message_low": "Bend knees less.",
+                "hard_max": 175.0
+            },
+            "NECK_ALIGNMENT": {
+                "type": "distance_from_line",
+                "joints": [
+                    "nose",
+                    "shoulder",
+                    "hip"
+                ],
+                "message_high": "Keep neck neutral with spine."
+            }
+        },
+        "ELBOW_ANGLE_min": 144.76942435571206,
+        "ELBOW_ANGLE_min_std": 8.91359067305043,
+        "ELBOW_ANGLE_max": 164.8211338182838,
+        "ELBOW_ANGLE_max_std": 1.9094777602926785,
+        "BACK_ANGLE_HORIZONTAL_min": 62.10687680172384,
+        "BACK_ANGLE_HORIZONTAL_min_std": 7.400619530819851,
+        "BACK_ANGLE_HORIZONTAL_max": 76.4876812871808,
+        "BACK_ANGLE_HORIZONTAL_max_std": 0.40888019389145597,
+        "SOFT_KNEES_min": 123.066464106897,
+        "SOFT_KNEES_min_std": 4.001537300281666,
+        "SOFT_KNEES_max": 140.10333221705562,
+        "SOFT_KNEES_max_std": 17.38363551560061,
+        "NECK_ALIGNMENT_min": 0.06322809975134669,
+        "NECK_ALIGNMENT_min_std": 0.009180159555796026,
+        "NECK_ALIGNMENT_max": 0.48926755033696046,
+        "NECK_ALIGNMENT_max_std": 0.08790153201484947
+    },
+    "tricep dips": {
+        "angle_configs": {
+            "ELBOW_ANGLE": {
+                "type": "angle",
+                "joints": [
+                    "shoulder",
+                    "elbow",
+                    "wrist"
+                ],
+                "message_high": "Elbows too straight.",
+                "message_low": "Elbows bent too much.",
+                "hard_max": 175.0
+            },
+            "TORSO_LEAN": {
+                "type": "angle",
+                "joints": [
+                    "vertical",
+                    "hip",
+                    "shoulder"
+                ],
+                "message_high": "Excessive torso lean (swinging or arching).",
+                "message_low": "Torso too upright.",
+                "hard_min": 15.0
+            },
+            "SHOULDER_ELBOW_DEPTH": {
+                "type": "vertical_distance",
+                "joints": [
+                    "shoulder",
+                    "elbow"
+                ],
+                "message_high": "Too deep! Shoulders dropping below elbows."
+            }
+        },
+        "ELBOW_ANGLE_min": 90.22555530114022,
+        "ELBOW_ANGLE_min_std": 21.26462967817518,
+        "ELBOW_ANGLE_max": 162.09361382197793,
+        "ELBOW_ANGLE_max_std": 16.217106803816282,
+        "TORSO_LEAN_min": 19.47720380471624,
+        "TORSO_LEAN_min_std": 3.3229793756443464,
+        "TORSO_LEAN_max": 58.027336397308126,
+        "TORSO_LEAN_max_std": 18.28534945464471,
+        "SHOULDER_ELBOW_DEPTH_min": -0.4124011578953833,
+        "SHOULDER_ELBOW_DEPTH_min_std": 0.16220169575936896,
+        "SHOULDER_ELBOW_DEPTH_max": 0.05831364895575961,
+        "SHOULDER_ELBOW_DEPTH_max_std": 0.20012060481388694
+    },
+    "tricep pushdown": {
+        "angle_configs": {
+            "ELBOW_ANGLE": {
+                "type": "angle",
+                "joints": [
+                    "shoulder",
+                    "elbow",
+                    "wrist"
+                ],
+                "message_high": "Elbows too straight.",
+                "message_low": "Elbows bent too much.",
+                "hard_max": 175.0
+            },
+            "ELBOW_PIN": {
+                "type": "horizontal_distance",
+                "joints": [
+                    "shoulder",
+                    "elbow"
+                ],
+                "message_high": "Keep elbows pinned to your sides (Horizontal Drift)!"
+            },
+            "TORSO_SWING": {
+                "type": "angle",
+                "joints": [
+                    "vertical",
+                    "hip",
+                    "shoulder"
+                ],
+                "message_high": "Excessive torso lean (swinging or arching).",
+                "message_low": "Torso too upright.",
+                "hard_min": 15.0
+            }
+        },
+        "ELBOW_ANGLE_min": 83.48460861428694,
+        "ELBOW_ANGLE_min_std": 11.662011178740212,
+        "ELBOW_ANGLE_max": 169.12732528164202,
+        "ELBOW_ANGLE_max_std": 0.6840023425521717,
+        "ELBOW_PIN_min": 0.09103243638341796,
+        "ELBOW_PIN_min_std": 0.026676948643605737,
+        "ELBOW_PIN_max": 0.17922733789607798,
+        "ELBOW_PIN_max_std": 0.06297428293467633,
+        "TORSO_SWING_min": 8.82396939457521,
+        "TORSO_SWING_min_std": 7.123939467184488,
+        "TORSO_SWING_max": 48.434355572699246,
+        "TORSO_SWING_max_std": 3.8022667135461723
+    }
+}
