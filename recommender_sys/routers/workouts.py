@@ -12,8 +12,13 @@ from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Query
 
 from workouts import WorkoutItem, load_workouts_csv
-from filters import recommend_workouts, hard_filter_workouts, score_workout
-from schemas import WorkoutResponse, WorkoutRecommendRequest
+from filters import recommend_workouts, hard_filter_workouts, score_workout, recommend_workout_plan
+from schemas import (
+    WorkoutResponse,
+    WorkoutRecommendRequest,
+    WorkoutPlanResponse,
+    WorkoutPlanDayResponse,
+)
 import state
 
 router = APIRouter()
@@ -123,3 +128,38 @@ def filter_workouts(session_id: str):
 
     valid = hard_filter_workouts(_ALL_WORKOUTS, user)
     return [_w_to_response(w) for w in valid]
+
+
+@router.post("/plan/{session_id}", response_model=WorkoutPlanResponse)
+def workout_plan(session_id: str, body: WorkoutRecommendRequest):
+    """
+    Return a structured day-by-day workout plan.
+    Each day contains multiple exercises (many-to-one: workouts → day).
+    Uses user.plan_type to determine the split (full_body / ppl / upper_lower).
+    """
+    user = state.get_user(session_id)
+    if not user:
+        raise HTTPException(status_code=404, detail=f"Session '{session_id}' not found")
+
+    if not _ALL_WORKOUTS:
+        raise HTTPException(
+            status_code=503,
+            detail="Workout dataset not loaded. Check megaGymDataset.csv path.",
+        )
+
+    plan = recommend_workout_plan(_ALL_WORKOUTS, user)
+
+    days = [
+        WorkoutPlanDayResponse(
+            day_name=day_name,
+            exercises=[_w_to_response(w, score_workout(w, user)) for w in exercises],
+        )
+        for day_name, exercises in plan.days.items()
+    ]
+
+    return WorkoutPlanResponse(
+        plan_type=plan.plan_type,
+        total_exercises=plan.total_exercises,
+        days=days,
+        summary=plan.summary(),
+    )

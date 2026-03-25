@@ -46,3 +46,5 @@ app.*.map.json
 
 # Python virtual environment
 /*/.venv
+
+/recommender_sys/pose_outputs/

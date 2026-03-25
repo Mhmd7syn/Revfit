@@ -35,7 +35,7 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen>
   String? _sessionId;
 
   // Options
-  final List<String> _experienceLevels = ['Beginner', 'Intermediate', 'Advanced'];
+  final List<String> _experienceLevels = ['Beginner', 'Intermediate', 'Expert'];
   final List<String> _activityLevels = [
     'sedentary',
     'light',
@@ -103,14 +103,17 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen>
       final payload = _buildPayload(user);
       _sessionId ??= await _recommendationService.createSession(payload);
 
-      final workouts = await _recommendationService.getWorkoutPlan(
+      final planData = await _recommendationService.getStructuredWorkoutPlan(
         _sessionId!,
         topK: _daysPerWeek ?? 5,
       );
 
       if (!mounted) return;
 
-      final plan = _mapToModel(workouts, user, _daysPerWeek ?? 5);
+      final plan = WorkoutPlanModel.fromStructuredApi(
+        planData,
+        fitnessLevel: _experienceLevel ?? 'Beginner',
+      );
       setState(() {
         _generatedPlan = plan;
         _isGenerating = false;
@@ -161,55 +164,6 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen>
         'cooking_time_preference': 'flexible',
         'protein_focus': 'medium',
       };
-
-  WorkoutPlanModel _mapToModel(
-    List<dynamic> workouts,
-    UserModel user,
-    int daysPerWeek,
-  ) {
-    final exercises = <ExerciseItem>[];
-    final schedule = <WorkoutDay>[];
-
-    for (int i = 0; i < workouts.length; i++) {
-      final w = workouts[i] as Map<String, dynamic>;
-      final ex = ExerciseItem(
-        name: w['name'],
-        bodyPart: w['body_part'],
-        equipment: w['equipment'],
-        notes: w['workout_type'],
-      );
-      exercises.add(ex);
-      schedule.add(WorkoutDay(
-        day: i + 1,
-        dayName: 'Day ${i + 1} · ${w['workout_type']}',
-        focus: w['body_part'],
-        exercises: [ex],
-        isRestDay: false,
-      ));
-    }
-
-    for (int i = workouts.length; i < daysPerWeek; i++) {
-      schedule.add(WorkoutDay(
-        day: i + 1,
-        dayName: 'Day ${i + 1} · Rest',
-        focus: 'Recovery',
-        exercises: [],
-        isRestDay: true,
-      ));
-    }
-
-    final rawGoal = user.goalType.replaceAll('_', ' ');
-    final planName =
-        '${rawGoal[0].toUpperCase()}${rawGoal.substring(1)} Plan';
-
-    return WorkoutPlanModel(
-      planName: planName,
-      daysPerWeek: daysPerWeek,
-      fitnessLevel: _experienceLevel ?? 'Beginner',
-      schedule: schedule,
-      notes: ['Generated based on your preferences and profile.'],
-    );
-  }
 
   void _showError(String msg) {
     setState(() => _errorMessage = msg);

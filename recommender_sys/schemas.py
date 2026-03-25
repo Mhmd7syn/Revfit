@@ -129,6 +129,18 @@ class WorkoutFeedbackRequest(BaseModel):
     liked: bool
 
 
+class WorkoutPlanDayResponse(BaseModel):
+    day_name: str
+    exercises: List[WorkoutResponse]
+
+
+class WorkoutPlanResponse(BaseModel):
+    plan_type: str
+    total_exercises: int
+    days: List[WorkoutPlanDayResponse]
+    summary: str
+
+
 # ================================================================== #
 #  Meals / Recipes                                                    #
 # ================================================================== #
@@ -196,3 +208,17 @@ class FeedbackSummaryResponse(BaseModel):
     disliked_workouts: List[str]
     workout_preferences: Dict[str, float]
     workout_type_preferences: Dict[str, float]
+
+
+# ================================================================== #
+#  Pose Analysis                                                      #
+# ================================================================== #
+
+class PoseAnalysisResponse(BaseModel):
+    exercise_name: str
+    form_score: float          # 0–100
+    rep_count: int
+    total_frames: int
+    bad_frame_count: int
+    feedback_summary: Dict[str, int]  # feedback message → occurrence count
+    video_url: str             # relative URL to download correction video

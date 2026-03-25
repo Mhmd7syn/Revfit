@@ -26,6 +26,45 @@ class WorkoutPlanModel {
       notes: (map['notes'] as List<dynamic>?)?.cast<String>(),
     );
   }
+
+  /// Parse the structured API response from `/workouts/plan/{session_id}`.
+  /// The response contains `plan_type`, `days` (list of day objects with
+  /// `day_name` and `exercises`), `total_exercises`, and `summary`.
+  factory WorkoutPlanModel.fromStructuredApi(
+    Map<String, dynamic> map, {
+    String? fitnessLevel,
+  }) {
+    final days = (map['days'] as List<dynamic>? ?? []);
+    final schedule = <WorkoutDay>[];
+
+    for (int i = 0; i < days.length; i++) {
+      final dayMap = days[i] as Map<String, dynamic>;
+      final dayName = dayMap['day_name'] as String? ?? 'Day ${i + 1}';
+      final exercises = (dayMap['exercises'] as List<dynamic>? ?? [])
+          .map((e) => ExerciseItem.fromMap(e as Map<String, dynamic>))
+          .toList();
+
+      schedule.add(WorkoutDay(
+        day: i + 1,
+        dayName: dayName,
+        isRestDay: exercises.isEmpty,
+        focus: exercises.isNotEmpty ? exercises.first.bodyPart : 'Recovery',
+        exercises: exercises,
+      ));
+    }
+
+    final planType = (map['plan_type'] as String? ?? 'workout')
+        .replaceAll('_', ' ');
+
+    return WorkoutPlanModel(
+      planName:
+          '${planType[0].toUpperCase()}${planType.substring(1)} Plan',
+      daysPerWeek: schedule.length,
+      fitnessLevel: fitnessLevel ?? '',
+      schedule: schedule,
+      notes: map['summary'] != null ? [map['summary'] as String] : null,
+    );
+  }
 }
 
 class WorkoutDay {
@@ -86,7 +125,7 @@ class ExerciseItem {
       reps: map['reps']?.toString(),
       durationSeconds: map['duration_seconds'] as int?,
       notes: map['notes'] as String?,
-      difficulty: map['difficulty'] as String?,
+      difficulty: map['difficulty'] ?? map['level'] as String?,
     );
   }
 
@@ -97,3 +136,4 @@ class ExerciseItem {
     return '';
   }
 }
+

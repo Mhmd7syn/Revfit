@@ -23,8 +23,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final isLoggedIn = AuthService().currentUser != null;
 
-    final Widget initialScreen =
-        isLoggedIn ? const HomeScreen() : const LoginScreen();
+    final Widget initialScreen = isLoggedIn
+        ? const HomeScreen()
+        : const LoginScreen();
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,

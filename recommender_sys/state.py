@@ -43,3 +43,18 @@ def list_sessions() -> list[str]:
 
 def get_feedback_store() -> FeedbackStore:
     return _feedback_store
+
+
+# ---- Pose analysis results ---- #
+
+_pose_results: Dict[str, list] = {}  # session_id → [result_dict, …]
+
+
+def store_pose_result(session_id: str, result: dict) -> None:
+    """Append a pose-analysis result dict for the given session."""
+    _pose_results.setdefault(session_id, []).append(result)
+
+
+def get_pose_results(session_id: str) -> list:
+    """Return all pose-analysis results for the given session."""
+    return _pose_results.get(session_id, [])

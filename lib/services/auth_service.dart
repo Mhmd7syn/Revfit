@@ -120,11 +120,6 @@ class AuthService {
         throw Exception("Sign in failed");
       }
 
-      // Check email verification
-      if (!user.emailVerified) {
-        return "Please verify your email before continuing.";
-      }
-
       // Load user data
       await _loadUserData(user.uid);
 

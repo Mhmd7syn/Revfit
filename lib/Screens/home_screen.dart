@@ -5,6 +5,7 @@ import 'package:gym2/services/auth_service.dart';
 import 'Chat_bot_screen.dart';
 import 'workout_plan_screen.dart';
 import 'diet_plan_screen.dart';
+import 'pose_analysis_screen.dart';
 import 'login_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -260,6 +261,19 @@ class HomeScreen extends StatelessWidget {
         onTap: () => Navigator.push(
           context,
           _route(const WorkoutPlanScreen()),
+        ),
+      ),
+      _ActionCard(
+        icon: Icons.sports_gymnastics_rounded,
+        label: 'Form Checker',
+        sublabel: 'AI pose analysis',
+        gradient: const LinearGradient(
+          colors: [Color(0xFF1A1A2A), Color(0xFF0D0D1A)],
+        ),
+        accentColor: AppColors.accent3,
+        onTap: () => Navigator.push(
+          context,
+          _route(const PoseAnalysisScreen()),
         ),
       ),
       _ActionCard(

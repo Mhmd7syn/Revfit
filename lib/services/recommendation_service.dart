@@ -19,6 +19,8 @@ class RecommendationService {
   // Workouts
   static String _recommendWorkouts(String sessionId) =>
       '$_baseUrl/workouts/recommend/$sessionId';
+  static String _workoutPlan(String sessionId) =>
+      '$_baseUrl/workouts/plan/$sessionId';
   static String _getWorkout(String workoutId) => '$_baseUrl/workouts/$workoutId';
   static String _filterWorkouts(String sessionId) =>
       '$_baseUrl/workouts/filter/$sessionId';
@@ -115,6 +117,23 @@ class RecommendationService {
       return response.data as List;
     } catch (e) {
       throw Exception('Failed to get workout recommendations: $e');
+    }
+  }
+
+  /// Get a structured day-by-day workout plan (multiple exercises per day).
+  Future<Map<String, dynamic>> getStructuredWorkoutPlan(
+    String sessionId, {
+    int topK = 5,
+  }) async {
+    try {
+      final response = await DioHelper.postData(
+        path: _workoutPlan(sessionId),
+        data: {'top_k': topK},
+      );
+      // Response is a WorkoutPlanResponse with days → exercises
+      return response.data as Map<String, dynamic>;
+    } catch (e) {
+      throw Exception('Failed to get structured workout plan: $e');
     }
   }
 

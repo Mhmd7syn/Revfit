@@ -1,4 +1,5 @@
 from constants import LEVEL_ORDER, GOAL_TYPES
+from plan_type import build_workout_plan, WorkoutPlan
 
 # ================================================================== #
 #  Workout scoring weights per goal                                   #
@@ -88,6 +89,95 @@ def recommend_workouts(workouts, user, top_k=5):
     scored.sort(key=lambda x: x[1], reverse=True)
     return [w for w, _ in scored[:top_k]]
 
+
+def recommend_workout_plan(workouts, user) -> WorkoutPlan:
+    """
+    Build a structured day-by-day WorkoutPlan using user.plan_type.
+
+    Steps
+    -----
+    1. Hard-filter workouts by equipment and fitness level.
+    2. Score every remaining workout (goal alignment + feedback + rating).
+    3. Pass the sorted candidates to build_workout_plan(), which groups
+       exercises by training day according to SPLIT_BODY_MAP.
+
+    Parameters
+    ----------
+    workouts : List[WorkoutItem]
+        Full catalogue loaded from CSV.
+    user : UserProfile
+        Provides plan_type, goal_type, fitness_level, equipment, etc.
+
+    Returns
+    -------
+    WorkoutPlan
+        Structured plan with .days dict (day_name → List[WorkoutItem]).
+    """
+    valid = hard_filter_workouts(workouts, user)
+    # Sort by score so _pick_exercises gets the best candidates first
+    scored = sorted(valid, key=lambda w: score_workout(w, user), reverse=True)
+    return build_workout_plan(scored, user)
+
+
+# ================================================================== #
+#  Muscle-specific recommendations                                    #
+# ================================================================== #
+
+def recommend_by_muscle(workouts, user, muscle: str, top_k: int = 5):
+    """
+    Return the top-K exercises that target a specific muscle group.
+
+    The function first applies the same hard filters (equipment, level)
+    as the main recommender, then narrows to the requested body part
+    and scores/ranks the remaining candidates normally.
+
+    Parameters
+    ----------
+    workouts : List[WorkoutItem]
+        Full catalogue loaded from CSV.
+    user     : UserProfile
+        Provides goal_type, fitness_level, equipment, feedback, etc.
+    muscle   : str
+        Body part name — must match a value in BODY_PARTS exactly
+        (e.g. "Chest", "Lats", "Quadriceps").  Case-insensitive.
+    top_k    : int
+        Maximum number of exercises to return.
+
+    Returns
+    -------
+    List[WorkoutItem]
+        Best exercises for the requested muscle, ranked by score.
+
+    Raises
+    ------
+    ValueError
+        If muscle doesn't match any known body part.
+    """
+    from workouts import BODY_PARTS
+
+    # Normalise: find the canonical casing used in the dataset
+    muscle_canonical = next(
+        (bp for bp in BODY_PARTS if bp.lower() == muscle.strip().lower()),
+        None,
+    )
+    if muscle_canonical is None:
+        valid_list = ", ".join(sorted(BODY_PARTS))
+        raise ValueError(
+            f"Unknown muscle '{muscle}'. Valid options: {valid_list}"
+        )
+
+    # 1. Hard filter (equipment + level)
+    valid = hard_filter_workouts(workouts, user)
+
+    # 2. Keep only exercises targeting the requested body part
+    targeted = [w for w in valid if w.body_part == muscle_canonical]
+
+    if not targeted:
+        return []
+
+    # 3. Score + rank
+    scored = sorted(targeted, key=lambda w: score_workout(w, user), reverse=True)
+    return scored[:top_k]
 
 # ================================================================== #
 #  Meal filtering & scoring                                           #
