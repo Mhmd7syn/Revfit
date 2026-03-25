@@ -93,8 +93,8 @@ def get_inference(video_path, exercise_name, headless=False, frame_skip=2):
             _span = _r_max - _r_min
             if _span > 0:
                 _rep_metric = _m
-                _rep_low_thresh = _r_min + 0.25 * _span
-                _rep_high_thresh = _r_max - 0.25 * _span
+                _rep_low_thresh = _r_min + 0.4 * _span
+                _rep_high_thresh = _r_max - 0.4 * _span
             break
 
     state = {
@@ -266,6 +266,7 @@ def update_rep_count(current_metrics, state, active_sides):
         val = current_metrics.get(f"{metric}_{side}")
         if val is None:
             continue
+            
         phase = state['rep_phase'][side]
         if phase == 'extended' and val < low:
             state['rep_phase'][side] = 'contracted'
@@ -570,7 +571,7 @@ def format_feedback_summary(feedbacks, fps, frame_skip=0):
 
 if __name__ == "__main__":
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    VIDEO_PATH = "../TestData/barbell biceps curl/barbell biceps curl_1.mp4"
+    VIDEO_PATH = "../TestData/barbell biceps curl/ELBOW_PIN4.mp4"
     VIDEO_ABS_PATH = os.path.abspath(os.path.join(BASE_DIR, VIDEO_PATH))
     if os.path.exists(VIDEO_ABS_PATH):
         get_inference(VIDEO_ABS_PATH, 'barbell biceps curl')
