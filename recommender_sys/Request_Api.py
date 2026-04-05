@@ -17,6 +17,7 @@ def fetch_recipes(
     user,
     num_results: int = 20,
     api_key: str = API_KEY,
+    sort: Optional[str] = None,
 ) -> List[RecipeItem]:
     """
     Fetch recipes from Spoonacular that match the user's preferences.
@@ -37,6 +38,10 @@ def fetch_recipes(
         "addRecipeNutrition": True,
         "fillIngredients": False,
     }
+
+    if sort:
+        params["sort"] = sort
+
 
     # Diet type (Spoonacular uses: vegetarian, vegan, paleo, ketogenic, …)
     if user.diet_type and user.diet_type != "omnivore":
