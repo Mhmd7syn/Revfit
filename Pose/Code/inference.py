@@ -49,41 +49,21 @@ def get_inference(video_path, exercise_name, headless=False, frame_skip=2):
     # Pre-compute bar width to keep it fixed from frame 1
     _all_possible_msgs = []
     for mc in metric_configs.values():
+        high_msg = mc.get('message_high')
+        low_msg = mc.get('message_low')
         for side in ['LEFT', 'RIGHT']:
-            if mc.get('message_high'):
-                _all_possible_msgs.append(f"[{side}] {mc['message_high']}")
-            if mc.get('message_low'):
-                _all_possible_msgs.append(f"[{side}] {mc['message_low']}")
+            if high_msg: _all_possible_msgs.append(f"[{side}] {high_msg}")
+            if low_msg: _all_possible_msgs.append(f"[{side}] {low_msg}")
 
     _scale_factor = max(scaled_w / 800.0, scaled_h / 720.0) if scaled_h > 0 and scaled_w > 0 else 1.0
     _pre_font_scale = max(0.4, 0.7 * _scale_factor)
     _pre_thick = max(1, int(2 * _scale_factor))
     _pre_width = scaled_w
 
-    _status_font_scale = max(0.5, 1.2 * _scale_factor)
-    _status_thick = max(1, int(3 * _scale_factor))
-    _status_w = max(
-        cv2.getTextSize("GOOD FORM", cv2.FONT_HERSHEY_SIMPLEX, _status_font_scale, _status_thick)[0][0],
-        cv2.getTextSize("FIX FORM", cv2.FONT_HERSHEY_SIMPLEX, _status_font_scale, _status_thick)[0][0]
-    )
-
-    _ex_font_scale = max(0.4, 0.7 * _scale_factor)
-    _ex_thick = max(1, int(2 * _scale_factor))
-    _ex_w = cv2.getTextSize(exercise_name.upper(), cv2.FONT_HERSHEY_SIMPLEX, _ex_font_scale, _ex_thick)[0][0]
-
-    _prog_font_scale = max(0.45, 0.6 * _scale_factor)
-    _prog_thick = max(1, int(1 * _scale_factor))
-    _prog_w = cv2.getTextSize("Time: 999.9s / 999.9s", cv2.FONT_HERSHEY_SIMPLEX, _prog_font_scale, _prog_thick)[0][0]
-
-    _rep_font_scale = max(0.5, 1.2 * _scale_factor)
-    _rep_thick = max(1, int(3 * _scale_factor))
-    _rep_w = cv2.getTextSize("REPS: 999", cv2.FONT_HERSHEY_SIMPLEX, _rep_font_scale, _rep_thick)[0][0]
-
-    _pre_width = max(_pre_width, _status_w + _ex_w + 60, _prog_w + 40, _rep_w + 40)
-
-    for _msg in _all_possible_msgs:
-        _tw = cv2.getTextSize(_msg, cv2.FONT_HERSHEY_SIMPLEX, _pre_font_scale, _pre_thick)[0][0]
-        _pre_width = max(_pre_width, _tw + 40)
+    # Ensure status, ex name, etc fit
+    for _msg in _all_possible_msgs + ["GOOD FORM", "FIX FORM", exercise_name.upper(), "REPS: 999", "Time: 999.9s / 999.9s"]:
+        _tw = cv2.getTextSize(_msg, cv2.FONT_HERSHEY_SIMPLEX, _pre_font_scale if "Time" not in _msg else 0.5, _pre_thick)[0][0]
+        _pre_width = max(_pre_width, _tw + 100)
 
     # Initialize the new RepetitionCounter
     rep_counter = RepetitionCounter(exercise_name, metric_configs, ref)
@@ -94,7 +74,7 @@ def get_inference(video_path, exercise_name, headless=False, frame_skip=2):
         'quit': False,
         'headless': headless,
         'feedbacks': {},
-        'bar_width': _pre_width if _pre_width > 0 else None,
+        'bar_width': _pre_width,
         'window_created': False,
         'rep_count': 0,
         'rep_counter': rep_counter,

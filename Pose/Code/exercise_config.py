@@ -1,3 +1,35 @@
+# Fit3D 25-joint skeleton mapping (Indices for Left, Right)
+FIT3D_JOINT_MAP = {
+    'hip':        (1, 4),
+    'knee':       (2, 5),
+    'ankle':      (3, 6),
+    'shoulder':   (11, 14),
+    'elbow':      (12, 15),
+    'wrist':      (13, 16),
+    'index':      (18, 21),
+    'nose':       None,  # Fit3D neck (10) can be used as a proxy if needed
+    'vertical':   None,
+    'horizontal': None,
+}
+
+# Mapping from Fit3D action names to internal config names
+FIT3D_TO_CONFIG_NAME = {
+    'squat':                           'squat',
+    'deadlift':                        'deadlift',
+    'pushup':                          'push-up',
+    'diamond_pushup':                  'push-up',
+    'dumbbell_biceps_curls':           'barbell biceps curl',
+    'dumbbell_hammer_curls':           'hammer curl',
+    'dumbbell_overhead_shoulder_press':'shoulder press',
+    'neutral_overhead_shoulder_press': 'shoulder press',
+    'side_lateral_raise':              'lateral raise',
+    'dumbbell_scaptions':              'lateral raise',
+    'man_maker':                       'burpee_variant',
+    'clean_and_press':                 'clean_and_press',
+    'burpees':                         'burpee',
+    'overhead_extension_thruster':     'thruster',
+}
+
 # Format: { 'names': [...], 'type': 'angle'|'horizontal_distance'|'vertical_distance'|'distance_from_line', 'joints': [...] }
 _JOINT_GROUPS = {
     # --- ANGLES ---
