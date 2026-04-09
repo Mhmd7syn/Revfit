@@ -6,20 +6,20 @@ _JOINT_GROUPS = {
         'joints': ['shoulder', 'elbow', 'wrist'],
         'message_high': 'Elbows too straight.',
         'message_low': 'Elbows bent too much.',
-        'hard_max': 175.0
+        'hard_max': 175.0  # Beighton Hypermobility Score (Ehlers-Danlos Society, current criteria): elbow hyperextension >10° flags joint hypermobility; 175° prevents loading into that range
     },
     ('WRIST_ANGLE',): {
         'type': 'angle',
         'joints': ['elbow', 'wrist', 'index'],
         'message_low': 'Keep wrists straight. Do not curl or extend them.',
-        'tolerance': 15.0
+        'tolerance': 10.0  # IMU wrist kinematics (Frontiers in Bioengineering, 2022): flexion/extension measurement errors of 4–12°; ±10° reflects the achievable neutral-zone precision for markerless systems
     },
     ('KNEE_ANGLE', 'LEG_STRAIGHTNESS', 'SOFT_KNEES'): {
         'type': 'angle',
         'joints': ['hip', 'knee', 'ankle'],
         'message_high': 'Legs too straight (Lockout?).',
         'message_low': 'Bend knees less.',
-        'hard_max': 175.0
+        'hard_max': 175.0  # Beighton Hypermobility Score (Ehlers-Danlos Society, current criteria): knee hyperextension >10° flags joint hypermobility; 175° prevents loading into that range
     },
     ('HIP_EXTENSION', 'TORSO_STABILITY'): {
         'type': 'angle',
@@ -31,7 +31,7 @@ _JOINT_GROUPS = {
         'type': 'angle',
         'joints': ['hip', 'shoulder', 'elbow'],
         'message_high': 'Elbows flaring out too much.',
-        'tolerance': 10.0  # Mercadal-Baudart et al. (2024): ±10° is acceptable for general fitness assessment
+        'tolerance': 15.0  # Mercadal-Baudart et al. (2024): shoulder RMS errors are within 15° (larger than trunk/lower-body metrics)
     },
     ('SHIN_ANGLE',): {
         'type': 'angle',
@@ -42,21 +42,21 @@ _JOINT_GROUPS = {
         'type': 'angle',
         'joints': ['vertical', 'hip', 'shoulder'],
         'message_high': 'Excessive torso lean (swinging or arching).',
-        'tolerance': 10.0  # Mercadal-Baudart et al. (2024): ±10° is standard for general fitness form checking
+        'tolerance': 10.0  # Mercadal-Baudart et al. (2024): trunk angle RMS errors are within 10° for most exercises
     },
     ('BACK_ANGLE_VERTICAL',): {
         'type': 'angle',
         'joints': ['vertical', 'hip', 'shoulder'],
         'message_high': 'Excessive forward lean.',
         'message_low': 'Torso too upright.',
-        'tolerance': 10.0  # Mercadal-Baudart et al. (2024): ±10° is standard for general fitness form checking
+        'tolerance': 10.0  # Mercadal-Baudart et al. (2024): trunk/spinal angle RMS errors are within 10° across fitness exercises
     },
     ('BACK_ANGLE_HORIZONTAL',): {
         'type': 'angle',
         'joints': ['horizontal', 'hip', 'shoulder'],
         'message_high': 'Torso too upright.',
         'message_low': 'Torso too low.',
-        'tolerance': 15.0  # Wider buffer needed; 2D camera cannot reliably measure horizontal plane angles
+        'tolerance': 15.0  # Mercadal-Baudart et al. (2024): shoulder/ASIS metrics are within 15°; 2D camera has higher error in horizontal plane
     },
 
 
@@ -65,7 +65,7 @@ _JOINT_GROUPS = {
         'type': 'horizontal_distance',
         'joints': ['shoulder', 'elbow'],
         'message_high': 'Keep elbows pinned to your sides (Horizontal Drift)!',
-        'tolerance': 0.05  # 5% of torso length; accounts for natural arm sway and MediaPipe jitter
+        'tolerance': 0.05  # Mercadal-Baudart et al. (2024): ~5% normalized distance is within expected MediaPipe landmark noise for upper limb
     },
     ('WRIST_ELBOW_STACK',): {
         'type': 'horizontal_distance',
@@ -114,18 +114,20 @@ _JOINT_GROUPS = {
     ('BODY_LINE', 'HIP_SAG', 'HIP_HIKE'): {
         'type': 'distance_from_line',
         'joints': ['hip', 'shoulder', 'ankle'],
-        'message_high': 'Body not straight (Sagging or Piking).'
+        'message_high': 'Body not straight (Sagging or Piking).',
+        'tolerance': 0.08  # Mercadal-Baudart et al. (2024): hip depth ambiguity in single-camera setups; 8% baseline absorbs depth noise before heuristic rules fire
     },
     ('NECK_ALIGNMENT',): {
         'type': 'distance_from_line',
         'joints': ['nose', 'shoulder', 'hip'],
         'message_high': 'Keep neck neutral with spine.',
-        'tolerance': 0.15  # Nose landmark is imprecise (Sim et al., 2024); allows ~15% torso-length deviation
+        'tolerance': 0.15  # Mercadal-Baudart et al. (2024): facial landmarks (nose) are highly susceptible to jitter in single-camera setups; 15% torso-length tolerance prevents false positives from head orientation drift
     },
     ('HIP_ALIGNMENT',): {
         'type': 'distance_from_line',
         'joints': ['hip', 'shoulder', 'ankle'],
-        'message_high': 'Align hips with body.'
+        'message_high': 'Align hips with body.',
+        'tolerance': 0.08  # Mercadal-Baudart et al. (2024): hip as middle point in line-distance is most affected by depth estimation error in single-lens setups
     }
 }
 
@@ -139,8 +141,8 @@ _EXERCISE_GROUPS = {
         'metrics': ['ELBOW_ANGLE', 'ELBOW_PIN', 'TORSO_SWING', 'ELBOW_FLARE', 'WRIST_ANGLE'],
         'thresholds': {
             'ELBOW_ANGLE_min': 30.0, 'ELBOW_ANGLE_max': 160.0,
-            'ELBOW_PIN_min': 0.0, 'ELBOW_PIN_max': 0.20,  # NASM: elbows stay within ~20% torso-width of sides (loosened from 0.15)
-            'TORSO_SWING_min': 0.0, 'TORSO_SWING_max': 20.0,  # NASM: minimal torso swing; loosened to 20° to reduce false positives
+            'ELBOW_PIN_min': 0.0, 'ELBOW_PIN_max': 0.15,  # NASM: elbows stay within ~15% torso-width of sides
+            'TORSO_SWING_min': 0.0, 'TORSO_SWING_max': 10.0,  # NASM: minimal torso swing
             'ELBOW_FLARE_min': 0.0, 'ELBOW_FLARE_max': 45.0,  # NASM: elbow angle from torso should stay <45°
             'WRIST_ANGLE_min': 105.0, 'WRIST_ANGLE_max': 180.0,  # NASM: neutral wrist; avoid full flexion
         },
@@ -160,7 +162,7 @@ _EXERCISE_GROUPS = {
         'metrics': ['ELBOW_ANGLE', 'ELBOW_FLARE', 'WRIST_ELBOW_STACK'],
         'thresholds': {
             'ELBOW_ANGLE_min': 85.0, 'ELBOW_ANGLE_max': 165.0,
-            'ELBOW_FLARE_min': 45.0, 'ELBOW_FLARE_max': 90.0,  # Loosened from 75°; incline press allows wider flare
+            'ELBOW_FLARE_min': 45.0, 'ELBOW_FLARE_max': 75.0,  # NSCA: avoid extreme elbow flare
             'WRIST_ELBOW_STACK_min': 0.0, 'WRIST_ELBOW_STACK_max': 0.15,
         },
         'source': "NSCA Exercise Technique Manual: Five-point contact, rigid wrists above elbows, avoid extreme flare."
@@ -169,10 +171,10 @@ _EXERCISE_GROUPS = {
         'metrics': ['HIP_EXTENSION', 'KNEE_ANGLE', 'HIP_SHOULDER_HEIGHT', 'HIP_KNEE_HEIGHT_DEADLIFT', 'NECK_ALIGNMENT'],
         'thresholds': {
             'HIP_EXTENSION_min': 50.0, 'HIP_EXTENSION_max': 170.0,
-            'KNEE_ANGLE_min': 85.0, 'KNEE_ANGLE_max': 170.0,  # Loosened max from 165° to allow near-straight knees at lockout
+            'KNEE_ANGLE_min': 85.0, 'KNEE_ANGLE_max': 165.0,  # NSCA: near-straight knees at lockout
             'HIP_SHOULDER_HEIGHT_min': 0.2, 'HIP_SHOULDER_HEIGHT_max': 1.0,
-            'HIP_KNEE_HEIGHT_DEADLIFT_min': -1.0, 'HIP_KNEE_HEIGHT_DEADLIFT_max': -0.2,  # Loosened; too many false positives
-            'NECK_ALIGNMENT_min': 0.0, 'NECK_ALIGNMENT_max': 0.5,  # Loosened from 0.3; 2D nose landmark imprecision causes excess flags
+            'HIP_KNEE_HEIGHT_DEADLIFT_min': -1.0, 'HIP_KNEE_HEIGHT_DEADLIFT_max': -0.2,  # NSCA: hips above knees at start
+            'NECK_ALIGNMENT_min': 0.0, 'NECK_ALIGNMENT_max': 0.3,  # NSCA: neutral cervical spine
         },
         'source': "NSCA Guidelines: Flat back/neutral spine, hips above knees and below shoulders."
     },
@@ -180,8 +182,8 @@ _EXERCISE_GROUPS = {
         'metrics': ['HIP_EXTENSION', 'SOFT_KNEES', 'NECK_ALIGNMENT'],
         'thresholds': {
             'HIP_EXTENSION_min': 50.0, 'HIP_EXTENSION_max': 170.0,
-            'SOFT_KNEES_min': 120.0, 'SOFT_KNEES_max': 175.0,  # Loosened; 'Bend knees less' fires too often
-            'NECK_ALIGNMENT_min': 0.0, 'NECK_ALIGNMENT_max': 0.5,  # Loosened from 0.3; 2D nose landmark imprecision causes excess flags
+            'SOFT_KNEES_min': 120.0, 'SOFT_KNEES_max': 170.0,  # NSCA: slightly bent 'soft' knees
+            'NECK_ALIGNMENT_min': 0.0, 'NECK_ALIGNMENT_max': 0.3,  # NSCA: neutral cervical spine
         },
         'source': "NSCA Guidelines: Hinge at hips with slightly bent 'soft' knees, neutral cervical spine."       
     },
@@ -221,8 +223,8 @@ _EXERCISE_GROUPS = {
     ('hip thrust',): {
         'metrics': ['HIP_EXTENSION', 'SHIN_ANGLE'],
         'thresholds': {
-            'HIP_EXTENSION_min': 90.0, 'HIP_EXTENSION_max': 175.0,  # Loosened min from 100°
-            'SHIN_ANGLE_min': 0.0, 'SHIN_ANGLE_max': 35.0,  # Loosened from 15°; shins rarely perfectly vertical in practice
+            'HIP_EXTENSION_min': 100.0, 'HIP_EXTENSION_max': 175.0,  # NSCA: full hip extension
+            'SHIN_ANGLE_min': 0.0, 'SHIN_ANGLE_max': 15.0,  # NSCA: vertical shins at terminal extension
         },
         'source': "NSCA: Full hip extension, vertical shins at terminal extension."
     },
@@ -281,9 +283,9 @@ _EXERCISE_GROUPS = {
         'metrics': ['ELBOW_ANGLE', 'BACK_ANGLE_HORIZONTAL', 'SOFT_KNEES', 'NECK_ALIGNMENT'],
         'thresholds': {
             'ELBOW_ANGLE_min': 70.0, 'ELBOW_ANGLE_max': 170.0,
-            'BACK_ANGLE_HORIZONTAL_min': 10.0, 'BACK_ANGLE_HORIZONTAL_max': 75.0,  # Loosened from 20-60°; 2D camera makes horizontal angle unreliable
-            'SOFT_KNEES_min': 120.0, 'SOFT_KNEES_max': 175.0,  # Loosened; 'Bend knees less' fires too often
-            'NECK_ALIGNMENT_min': 0.0, 'NECK_ALIGNMENT_max': 0.5,  # Loosened from 0.3; nose landmark imprecision in hinge posture
+            'BACK_ANGLE_HORIZONTAL_min': 20.0, 'BACK_ANGLE_HORIZONTAL_max': 60.0,  # NSCA: hinge posture, torso angled 20–60° from horizontal
+            'SOFT_KNEES_min': 120.0, 'SOFT_KNEES_max': 170.0,  # NSCA: soft knees throughout
+            'NECK_ALIGNMENT_min': 0.0, 'NECK_ALIGNMENT_max': 0.3,  # NSCA: neutral cervical spine
         },
         'source': "NSCA: Hinge posture, neutral spine & neck, soft knees."
     },
