@@ -100,6 +100,7 @@ def evaluate_metrics(current_metrics, metric_configs, ref, state, active_sides=N
                 lower_bound = max(lower_bound, hard_min)
 
             if current_val < lower_bound:
+                print(f"FAILED LOW: {metric_name} {side} val {current_val} < {lower_bound}")
                 is_good_form = False
                 bad_joints.update(f"{j}_{side}" for j in joints_involved)
                 if msg_low:
@@ -112,6 +113,7 @@ def evaluate_metrics(current_metrics, metric_configs, ref, state, active_sides=N
                         'metric_type': metric_type
                     })
             elif current_val > upper_bound:
+                print(f"FAILED HIGH: {metric_name} {side} val {current_val} > {upper_bound}")
                 is_good_form = False
                 bad_joints.update(f"{j}_{side}" for j in joints_involved)
                 if msg_high:

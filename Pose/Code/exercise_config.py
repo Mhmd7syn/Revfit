@@ -183,9 +183,9 @@ _EXERCISE_GROUPS = {
     ('squat',): {
         'metrics': ['KNEE_ANGLE', 'HIP_EXTENSION', 'BACK_ANGLE_VERTICAL', 'SQUAT_DEPTH_CHECK'],
         'thresholds': {
-            'KNEE_ANGLE_min': 60.0, 'KNEE_ANGLE_max': 170.0,
-            'HIP_EXTENSION_min': 60.0, 'HIP_EXTENSION_max': 170.0,
-            'BACK_ANGLE_VERTICAL_min': 10.0, 'BACK_ANGLE_VERTICAL_max': 45.0,
+            'KNEE_ANGLE_min': 30.0, 'KNEE_ANGLE_max': 175.0,
+            'HIP_EXTENSION_min': 30.0, 'HIP_EXTENSION_max': 175.0,
+            'BACK_ANGLE_VERTICAL_min': 5.0, 'BACK_ANGLE_VERTICAL_max': 95.0,
             'SQUAT_DEPTH_CHECK_min': -0.1, 'SQUAT_DEPTH_CHECK_max': 1.0,
         },
         'source': "NSCA Guidelines (Parallel Squat Depth), NASM OHSA (LPHC neutral, avoid excessive forward lean)"
@@ -240,7 +240,7 @@ _EXERCISE_GROUPS = {
     ('plank',): {
         'metrics': ['BODY_LINE'],
         'thresholds': {
-            'BODY_LINE_min': 0.0, 'BODY_LINE_max': 0.15,
+            'BODY_LINE_min': 0.0, 'BODY_LINE_max': 0.35,
         },
         'source': "NASM: LPHC neutral. Avoid lumbar extension (sagging) or hip flexion (piking)."
     },
@@ -301,6 +301,15 @@ _EXERCISE_GROUPS = {
             'TORSO_LEAN_min': 20.0, 'TORSO_LEAN_max': 60.0,
         },
         'source': "NSCA Core Training: Maintain v-sit posture, rotate from thoracic spine."
+    },
+    ('lunge',): {
+        'metrics': ['KNEE_ANGLE', 'SHIN_ANGLE', 'BACK_ANGLE_VERTICAL'],
+        'thresholds': {
+            'KNEE_ANGLE_min': 30.0, 'KNEE_ANGLE_max': 175.0, 
+            'SHIN_ANGLE_min': 0.0, 'SHIN_ANGLE_max': 45.0,  
+            'BACK_ANGLE_VERTICAL_min': 0.0, 'BACK_ANGLE_VERTICAL_max': 75.0, 
+        },
+        'source': "NASM: Lunge kinematics. Knee should not significantly track past toes, torso upright."
     },
     ('shoulder press',): {
         'metrics': ['ELBOW_ANGLE', 'TORSO_ARCH', 'WRIST_ELBOW_STACK'],
