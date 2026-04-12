@@ -18,9 +18,15 @@ except AttributeError:
 TCN_MODEL = None
 TCN_WINDOW_SIZE = 81
 
-def load_tcn_model(model_path="Notebook/Pose Landmarks/best_tcn_model.pt"):
+def load_tcn_model(model_path=None):
     global TCN_MODEL
+    if model_path is None:
+        _here = os.path.dirname(os.path.abspath(__file__))
+        model_path = os.path.join(_here, "..", "Models", "best_tcn_model.pt")
+    model_path = os.path.abspath(model_path)
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
     model = Temporal3DRefinementNet(num_joints_in=33, num_joints_out=25)
     
     # Handle both full state_dict and jit or path issues
@@ -116,13 +122,25 @@ def process_video(args, frame_skip=0, frame_callback=None):
 
             # Pre-feed to TCN
             with torch.no_grad():
-                # Normalization: Root-relative (centered on hips)
+                # 1. Normalization: Root-relative (centered on hips)
                 # MP Joints 23 (L Hip), 24 (R Hip)
                 mp_root = (window[:, 23, :] + window[:, 24, :]) / 2.0
                 norm_window = window - mp_root[:, np.newaxis, :]
                 
+                # 2. Sequence-level scale normalization (median spine length)
+                # MP Joints 11 (L Shoulder), 12 (R Shoulder)
+                mp_shoulders = (norm_window[:, 11, :] + norm_window[:, 12, :]) / 2.0
+                mp_spine_len_all = np.linalg.norm(mp_shoulders, axis=-1)
+                mp_spine_len_median = max(1e-5, float(np.median(mp_spine_len_all)))
+                
+                norm_window = norm_window / mp_spine_len_median
+                
                 tens = torch.from_numpy(norm_window).float().unsqueeze(0).to(device)
                 refined_full = TCN_MODEL(tens).squeeze(0).cpu().numpy() # (T, 25, 3)
+                
+                # 3. Unscale to restore original metric space
+                refined_full = refined_full * mp_spine_len_median
+                
                 refined_pose = refined_full[mid_idx if len(landmark_buffer) >= TCN_WINDOW_SIZE else -1]
                 
             frame_metrics = {}

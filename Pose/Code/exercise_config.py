@@ -174,9 +174,9 @@ _EXERCISE_GROUPS = {
         'thresholds': {
             'ELBOW_ANGLE_min': 30.0, 'ELBOW_ANGLE_max': 160.0,
             'ELBOW_PIN_min': 0.0, 'ELBOW_PIN_max': 0.15,  # NASM: elbows stay within ~15% torso-width of sides
-            'TORSO_SWING_min': 0.0, 'TORSO_SWING_max': 10.0,  # NASM: minimal torso swing
+            'TORSO_SWING_min': 0.0, 'TORSO_SWING_max': 80.0,  # NASM: catches only severe swinging; 2D-projected lean regularly exceeds 50° due to off-axis camera placement
             'ELBOW_FLARE_min': 0.0, 'ELBOW_FLARE_max': 45.0,  # NASM: elbow angle from torso should stay <45°
-            'WRIST_ANGLE_min': 105.0, 'WRIST_ANGLE_max': 180.0,  # NASM: neutral wrist; avoid full flexion
+            'WRIST_ANGLE_min': 85.0, 'WRIST_ANGLE_max': 180.0,  # NASM: neutral wrist; relaxed since wrist naturally dips during supination
         },
         'source': "NASM Compensations: Avoid torso swing and elbow flare. Keep wrists neutral."
     },
@@ -194,7 +194,7 @@ _EXERCISE_GROUPS = {
         'metrics': ['ELBOW_ANGLE', 'ELBOW_FLARE', 'WRIST_ELBOW_STACK'],
         'thresholds': {
             'ELBOW_ANGLE_min': 85.0, 'ELBOW_ANGLE_max': 165.0,
-            'ELBOW_FLARE_min': 45.0, 'ELBOW_FLARE_max': 75.0,  # NSCA: avoid extreme elbow flare
+            'ELBOW_FLARE_min': 30.0, 'ELBOW_FLARE_max': 75.0,  # NSCA: avoid extreme elbow flare; min relaxed to 30° to accommodate natural pressing angle
             'WRIST_ELBOW_STACK_min': 0.0, 'WRIST_ELBOW_STACK_max': 0.15,
         },
         'source': "NSCA Exercise Technique Manual: Five-point contact, rigid wrists above elbows, avoid extreme flare."
@@ -203,9 +203,9 @@ _EXERCISE_GROUPS = {
         'metrics': ['HIP_EXTENSION', 'KNEE_ANGLE', 'HIP_SHOULDER_HEIGHT', 'HIP_KNEE_HEIGHT_DEADLIFT', 'NECK_ALIGNMENT'],
         'thresholds': {
             'HIP_EXTENSION_min': 50.0, 'HIP_EXTENSION_max': 170.0,
-            'KNEE_ANGLE_min': 85.0, 'KNEE_ANGLE_max': 165.0,  # NSCA: near-straight knees at lockout
-            'HIP_SHOULDER_HEIGHT_min': 0.2, 'HIP_SHOULDER_HEIGHT_max': 1.0,
-            'HIP_KNEE_HEIGHT_DEADLIFT_min': -1.0, 'HIP_KNEE_HEIGHT_DEADLIFT_max': -0.2,  # NSCA: hips above knees at start
+            'KNEE_ANGLE_min': 85.0, 'KNEE_ANGLE_max': 175.0,  # NSCA: near-straight knees at lockout; raised to 175° to allow full lockout
+            'HIP_SHOULDER_HEIGHT_min': 0.05, 'HIP_SHOULDER_HEIGHT_max': 1.0,  # NSCA: hips below shoulders; min relaxed to avoid false "too high" at lockout
+            'HIP_KNEE_HEIGHT_DEADLIFT_min': -1.0, 'HIP_KNEE_HEIGHT_DEADLIFT_max': 0.05,  # NSCA: hips above knees at start; max raised slightly to avoid lockout collisions
             'NECK_ALIGNMENT_min': 0.0, 'NECK_ALIGNMENT_max': 0.3,  # NSCA: neutral cervical spine
         },
         'source': "NSCA Guidelines: Flat back/neutral spine, hips above knees and below shoulders."
@@ -232,7 +232,7 @@ _EXERCISE_GROUPS = {
         'metrics': ['ELBOW_ANGLE', 'BODY_SWING', 'CHIN_BAR_HEIGHT'],
         'thresholds': {
             'ELBOW_ANGLE_min': 50.0, 'ELBOW_ANGLE_max': 165.0,
-            'BODY_SWING_min': 0.0, 'BODY_SWING_max': 15.0,  # NSCA: minimal lower body swing; <15° considered controlled
+            'BODY_SWING_min': 0.0, 'BODY_SWING_max': 80.0,  # NSCA: catches only gross swinging; suspended body + off-axis camera makes projected lean angle regularly exceed 50°
             'CHIN_BAR_HEIGHT_min': -0.4, 'CHIN_BAR_HEIGHT_max': 0.5,  # NSCA: chin must clear bar height; nose above bar as proxy
         },
         'source': "NSCA: Dead hang to chin over bar, minimal lower body swing."
@@ -253,10 +253,9 @@ _EXERCISE_GROUPS = {
         'source': "NSCA: Maintain slight bend in elbows throughout fly motion."
     },
     ('hip thrust',): {
-        'metrics': ['HIP_EXTENSION', 'SHIN_ANGLE'],
+        'metrics': ['HIP_EXTENSION'],
         'thresholds': {
             'HIP_EXTENSION_min': 100.0, 'HIP_EXTENSION_max': 175.0,  # NSCA: full hip extension
-            'SHIN_ANGLE_min': 0.0, 'SHIN_ANGLE_max': 15.0,  # NSCA: vertical shins at terminal extension
         },
         'source': "NSCA: Full hip extension, vertical shins at terminal extension."
     },
@@ -264,7 +263,7 @@ _EXERCISE_GROUPS = {
         'metrics': ['ELBOW_ANGLE', 'TORSO_SWING'],
         'thresholds': {
             'ELBOW_ANGLE_min': 60.0, 'ELBOW_ANGLE_max': 165.0,
-            'TORSO_SWING_min': 0.0, 'TORSO_SWING_max': 20.0,
+            'TORSO_SWING_min': 0.0, 'TORSO_SWING_max': 80.0,  # NSCA: catches only gross rocking; off-axis camera regularly produces projected lean >50° even with correct technique
         },
         'source': "NSCA Guidelines: Slight torso lean back, pull bar to upper chest."
     },
@@ -281,8 +280,8 @@ _EXERCISE_GROUPS = {
     ('leg extension',): {
         'metrics': ['KNEE_ANGLE', 'TORSO_STABILITY'],
         'thresholds': {
-            'KNEE_ANGLE_min': 80.0, 'KNEE_ANGLE_max': 170.0,
-            'TORSO_STABILITY_min': 90.0, 'TORSO_STABILITY_max': 130.0,
+            'KNEE_ANGLE_min': 80.0, 'KNEE_ANGLE_max': 175.0,  # NSCA: terminal knee extension
+            'TORSO_STABILITY_min': 70.0, 'TORSO_STABILITY_max': 160.0,  # hip-shoulder-knee; very wide range since seat recline angle varies greatly between machines
         },
         'source': "NSCA: Controlled terminal knee extension, avoid explosive lockout."
     },
@@ -290,15 +289,15 @@ _EXERCISE_GROUPS = {
         'metrics': ['HIP_EXTENSION', 'LEG_STRAIGHTNESS'],
         'thresholds': {
             'HIP_EXTENSION_min': 70.0, 'HIP_EXTENSION_max': 170.0,
-            'LEG_STRAIGHTNESS_min': 120.0, 'LEG_STRAIGHTNESS_max': 175.0,
+            'LEG_STRAIGHTNESS_min': 120.0, 'LEG_STRAIGHTNESS_max': 180.0,  # NASM: maintain straight legs; max raised to 180° since hard_max=175° already prevents true hyperextension
         },
         'source': "NASM: LPHC stability. Maintain straight legs without lumbar spine compensation."
     },
     ('russian twist',): {
         'metrics': ['HIP_EXTENSION', 'TORSO_LEAN'],
         'thresholds': {
-            'HIP_EXTENSION_min': 50.0, 'HIP_EXTENSION_max': 120.0,
-            'TORSO_LEAN_min': 20.0, 'TORSO_LEAN_max': 60.0,
+            'HIP_EXTENSION_min': 50.0, 'HIP_EXTENSION_max': 160.0,  # NSCA: v-sit posture; max raised — hip angle appears large when viewed from the side due to floor contact
+            'TORSO_LEAN_min': 5.0, 'TORSO_LEAN_max': 80.0,  # NSCA: only catches near-lying-flat; off-axis camera means projected lean regularly exceeds 50° for normal v-sit posture
         },
         'source': "NSCA Core Training: Maintain v-sit posture, rotate from thoracic spine."
     },
@@ -315,7 +314,7 @@ _EXERCISE_GROUPS = {
         'metrics': ['ELBOW_ANGLE', 'TORSO_ARCH', 'WRIST_ELBOW_STACK'],
         'thresholds': {
             'ELBOW_ANGLE_min': 50.0, 'ELBOW_ANGLE_max': 170.0,
-            'TORSO_ARCH_min': 0.0, 'TORSO_ARCH_max': 25.0,
+            'TORSO_ARCH_min': 0.0, 'TORSO_ARCH_max': 80.0,  # NASM: catches only extreme arching; off-axis camera regularly produces projected lean >50° even with neutral posture
             'WRIST_ELBOW_STACK_min': 0.0, 'WRIST_ELBOW_STACK_max': 0.15,
         },
         'source': "NASM OHSA / NSCA: LPHC neutral, avoid excessive lumbar arch, wrists stacked over elbows."
@@ -325,7 +324,7 @@ _EXERCISE_GROUPS = {
         'thresholds': {
             'ELBOW_ANGLE_min': 70.0, 'ELBOW_ANGLE_max': 170.0,
             'BACK_ANGLE_HORIZONTAL_min': 20.0, 'BACK_ANGLE_HORIZONTAL_max': 60.0,  # NSCA: hinge posture, torso angled 20–60° from horizontal
-            'SOFT_KNEES_min': 120.0, 'SOFT_KNEES_max': 170.0,  # NSCA: soft knees throughout
+            'SOFT_KNEES_min': 120.0, 'SOFT_KNEES_max': 178.0,  # NSCA: soft knees; raised to 178° — near full knee extension at top of row is biomechanically normal
             'NECK_ALIGNMENT_min': 0.0, 'NECK_ALIGNMENT_max': 0.3,  # NSCA: neutral cervical spine
         },
         'source': "NSCA: Hinge posture, neutral spine & neck, soft knees."
@@ -334,8 +333,8 @@ _EXERCISE_GROUPS = {
         'metrics': ['ELBOW_ANGLE', 'TORSO_LEAN', 'SHOULDER_ELBOW_DEPTH'],
         'thresholds': {
             'ELBOW_ANGLE_min': 80.0, 'ELBOW_ANGLE_max': 170.0,
-            'TORSO_LEAN_min': 0.0, 'TORSO_LEAN_max': 30.0,
-            'SHOULDER_ELBOW_DEPTH_min': -1.0, 'SHOULDER_ELBOW_DEPTH_max': 0.1,
+            'TORSO_LEAN_min': 0.0, 'TORSO_LEAN_max': 80.0,  # NSCA: catches only extreme forward hunch; off-axis camera regularly projects lean >50° with correct posture
+            'SHOULDER_ELBOW_DEPTH_min': -1.0, 'SHOULDER_ELBOW_DEPTH_max': 0.2,  # NSCA: shoulders at/above elbow level; 0.2 absorbs depth estimation noise
         },
         'source': "NSCA: Descend until shoulders are parallel with elbows."
     },
@@ -344,7 +343,7 @@ _EXERCISE_GROUPS = {
         'thresholds': {
             'ELBOW_ANGLE_min': 50.0, 'ELBOW_ANGLE_max': 170.0,
             'ELBOW_PIN_min': 0.0, 'ELBOW_PIN_max': 0.15,  # NSCA: upper arms stationary and pinned against sides
-            'TORSO_SWING_min': 0.0, 'TORSO_SWING_max': 15.0,  # NSCA: avoid torso rocking; <15° is acceptable
+            'TORSO_SWING_min': 0.0, 'TORSO_SWING_max': 80.0,  # NSCA: catches only gross rocking; camera-projected trunk lean exceeds 50° with normal technique when filmed off-axis
         },
         'source': "NSCA: Upper arms stationary against sides, isolate elbow extension."
     }

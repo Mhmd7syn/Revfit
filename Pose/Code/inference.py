@@ -184,9 +184,19 @@ def get_inference(video_path, exercise_name, headless=False, frame_skip=2):
 
 if __name__ == "__main__":
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    VIDEO_PATH = "../TestData/barbell biceps curl/ELBOW_PIN4.mp4"
+    # ✅ Good form:
+    #   ../TestData/deadlift/deadlift_1.mp4            -> 'deadlift'
+    #   ../TestData/push-up/video15.mp4                -> 'push-up'
+    #   ../TestData/lateral raise/video10.mp4          -> 'lateral raise'
+    #
+    # ❌ Bad form:
+    #   ../TestData/lateral raise/lateral raise_1.mp4  -> 'lateral raise'        (elbows too bent at top)
+    #   ../TestData/deadlift/video4.mp4               -> 'deadlift'             (legs too straight)
+    #   ../TestData/push-up/push-up_1.mp4             -> 'push-up'              (body sag + elbow flare)
+
+    VIDEO_PATH = "../TestData/deadlift/deadlift_1.mp4"
     VIDEO_ABS_PATH = os.path.abspath(os.path.join(BASE_DIR, VIDEO_PATH))
     if os.path.exists(VIDEO_ABS_PATH):
-        get_inference(VIDEO_ABS_PATH, 'barbell biceps curl')
+        get_inference(VIDEO_ABS_PATH, 'deadlift')
     else:
         print("Video not found. Please check paths.")

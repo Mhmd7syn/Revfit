@@ -2,13 +2,13 @@ import numpy as np
 from scipy.signal import savgol_filter
 
 class RepetitionCounter:
-    def __init__(self, exercise_name, metric_configs, ref_thresholds, min_rep_frames=5):
+    def __init__(self, exercise_name, metric_configs, ref_thresholds):
         self.exercise_name = exercise_name
         self.metric_configs = metric_configs
         self.ref_thresholds = ref_thresholds
-        self.min_rep_frames = min_rep_frames
         
         self.history = []  # To store the angles of each frame
+        self.max_rep_count = 0
 
         # TACTICAL OVERRIDES: Define joint blends for better stability (from notebook)
         self.overrides = {
@@ -72,7 +72,13 @@ class RepetitionCounter:
         _, rep_low, rep_high = self.metrics_data[0] # Thresholds from primary metric
         
         pred_bounds = self._detect_rep_boundaries(angles, rep_low, rep_high)
-        return max(0, len(pred_bounds) - 1)
+        current_count = max(0, len(pred_bounds) - 1)
+        
+        # Enforce monotonicity to prevent flickering during movement
+        if current_count > self.max_rep_count:
+            self.max_rep_count = current_count
+            
+        return self.max_rep_count
         
     def _detect_rep_boundaries(self, angles, rep_low, rep_high):
         """Hybrid AIFit + Heuristic segmentation with Continuous Domain Relaxation."""
