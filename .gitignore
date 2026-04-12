@@ -21,3 +21,4 @@ recommender_sys/__pycache__/Request_Api.cpython-313.pyc
 recommender_sys/__pycache__/user_profile.cpython-313.pyc
 recommender_sys/__pycache__/workouts.cpython-313.pyc
 .DS_Store
+recommender_sys/experiments/__pycache__/user_personas.cpython-313.pyc

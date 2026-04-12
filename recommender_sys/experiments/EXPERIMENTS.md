@@ -141,19 +141,19 @@ After applying the same hard filters (equipment, fitness level) as our main
 system, randomly selects K workouts with no scoring.
 
 ### Results
-- **Precision: 0.960** — Surprisingly high, but expected: relevance sets are large
-  (avg ~1,100 items per persona out of 2,878 total), so random picks land inside
-  them most of the time.  This 0.96 is the floor that even *no intelligence* achieves.
-- **Diversity: 0.52** — The best diversity score of all implemented methods.  With no
-  goal bias, the system naturally samples across all workout types and body parts.
-- **Coverage: 2.6%** — Each persona only sees 10 of 2,878 workouts, so single-persona
-  coverage is always low.  This is the same for all methods.
-- **Novelty: 10.49** — Consistent across all methods (popularity proxy is uniform).
+- **Precision: 0.940** — Even picking blindly, nearly all recommendations are
+  relevant because relevance sets are large (avg ~1,100 relevant workouts out of
+  2,878 total).  This is the floor — the minimum any method must beat.
+- **Diversity: 0.440** — The second-best diversity score.  Without goal bias, the
+  system samples freely across workout types and body parts.
+- **Coverage: 1.3%** — Each persona sees only 5 of 2,878 workouts, so per-persona
+  coverage is always low at K=5.  Consistent across all methods.
+- **Novelty: 10.49** — Uniform across all methods (the popularity proxy is the same).
 
 ### What we learned
-Random sets the **floor**: 0.960 precision.  Any intelligent system must exceed this.
-High diversity (0.52) shows that *without goal bias*, workouts are spread across
-the full catalogue — which is actually valuable context for comparing Exp 2 and 3.
+Random sets the **floor**: 0.940 precision.  Any intelligent system must exceed this.
+High diversity (0.440) shows that *without goal bias*, workouts are spread across
+the full catalogue — valuable context for comparing Exp 2 and 3.
 
 ### Why we moved on
 Random's only virtue is diversity.  We needed to test whether even a simple signal
@@ -175,20 +175,19 @@ Ranks workouts by how popular they are globally (using the dataset's rating
 field as a proxy for completion count).  Everyone gets the same recommendations.
 
 ### Results
-- **Precision: 0.990** — A small gain over random (0.960 → 0.990).  Popular workouts
+- **Precision: 0.980** — A small gain over random (0.940 → 0.980).  Popular workouts
   happen to be well-rated Strength/Cardio exercises that align with most goal types,
   so they land in the relevant set for nearly every persona.
-- **Diversity: 0.13** — The worst diversity of all methods. Every persona gets almost
-  the same 10 top-rated workouts — a beginner training fat_loss receives the same list
-  as an advanced powerlifter.  This is the core failure of popularity-only systems.
-- **Coverage: 1.5%** — Lower than random because popularity concentrates all
-  recommendations in a tiny elite subset of the catalogue.
+- **Diversity: 0.060** — The worst diversity of all methods by a wide margin.
+  At K=5, everyone gets virtually the same 5 top-rated workouts — a beginner training
+  fat_loss receives the same list as an advanced powerlifter.  This is the core
+  failure of popularity-only systems, and it is starker at K=5 than K=10.
+- **Coverage: 0.8%** — The lowest of all methods; popularity concentrates all
+  recommendations into a tiny elite of the catalogue.
 
 ### What we learned
-Popularity wins on precision (nearly all top-rated items are goal-relevant) but
-**destroys diversity** — the diversity score drops from 0.52 (random) to 0.13.
-In practice this means every user sees the same list, which is useless for a
-personalised app.
+Popularity gains +0.04 precision over random but **destroys diversity** (0.440 → 0.060).
+In practice every user sees the same 5 workouts — useless for a personalised app.
 
 ### Why we moved on
 Popularity ignores individual differences entirely.  We needed personalisation based
@@ -220,16 +219,15 @@ Feedback uses exponential decay (half-life varies by goal type).
   the scoring function weights workout types by goal (`GOAL_TYPE_WEIGHTS`), and
   relevance was defined using those exact same types.  The system recommends exactly
   what each persona's goal calls for, every time.
-- **Diversity: 0.52** — Equal to random, and far above Most Popular (0.13).  Goal
-  weighting prioritises certain types but still selects across multiple body parts
-  and exercise styles within those types, keeping variety high.
-- **Coverage: 1.6%** — Slightly above Most Popular (1.5%) and below Random (2.6%),
-  confirming that goal-focused filtering is targeted but not as broad as random sampling.
+- **Diversity: 0.540** — The highest of all methods, including random (0.440).  At K=5
+  the goal-weight scoring deliberately selects across different body parts within the
+  top-scoring workout types, producing a balanced short list.
+- **Coverage: 0.9%** — Consistent with other content-aware methods at K=5.
 
 ### What we learned
 Content-based filtering is **ideal for our use case** because:
 1. It achieves perfect precision — every recommendation matches the user's goal type
-2. It maintains diversity equal to full-random sampling (no "same list for everyone")
+2. It achieves the highest diversity — no "same list for everyone" problem
 3. It works with zero interaction data — no cold-start problem for new users
 4. Different personas receive different recommendations (coverage spreads across the catalogue)
 
@@ -298,7 +296,7 @@ Blends content-based scores with popularity, controlled by parameter α:
 | 0.0  | Pure popularity (Exp 2)            |
 
 ### Results (skeleton implementation, α=0.7)
-- **Precision: 1.000, Diversity: 0.52** — Identical to Content-Based (Exp 3).  At α=0.7
+- **Precision: 1.000, Diversity: 0.540** — Identical to Content-Based (Exp 3).  At α=0.7
   the content signal dominates; since popularity is represented uniformly across our
   catalogue proxy, the blend does not change the final ranking.
 - This confirms the skeleton is correctly implemented: when popularity data is
@@ -346,11 +344,10 @@ Weights can be set manually or learned via grid/random search on held-out data.
 | Learned            | Data-driven optimisation     |
 
 ### Results (skeleton implementation, goal-focused weights)
-- **Precision: 1.000, Diversity: 0.50** — Nearly identical to Exp 3 (1.000 / 0.52).
-  Slightly lower diversity (0.50 vs 0.52) because heavier goal-type weighting pushes
-  more recommendations into the single highest-scoring workout type per goal.
-- **Coverage: 1.7%** — Marginally the highest of all content-based variants, suggesting
-  weighted scoring explores a slightly broader slice of the catalogue.
+- **Precision: 1.000, Diversity: 0.540** — Identical to Exp 3 and Exp 5 at K=5.
+  Slightly different weights push recommendations within the same goal-type bucket,
+  so the top-5 list is effectively the same.
+- **Coverage: 0.9%** — Consistent with the other content-aware variants.
 
 ### What we learned
 Feature weighting is a natural evolution of content-based filtering.  With real
@@ -362,30 +359,31 @@ The challenge is collecting sufficient data to learn meaningful weight differenc
 
 ## Workout Comparison Summary
 
-> Evaluated across **10 personas**, 2,878 workouts, K=10.
+> Evaluated across **10 personas**, 2,878 workouts, **K=5**.
 > Metrics averaged per persona.  Recall omitted (always < 0.05 due to large catalogue).
 
 | Experiment | Prec | Divers | Cover | Novel | Status |
 |-----------|------|--------|-------|-------|--------|
-| 1. Random | 0.960 | **0.520** | 0.026 | 10.49 | ✅ Implemented |
-| 2. Most Popular | 0.990 | 0.130 | 0.015 | 10.49 | ✅ Implemented |
-| **3. Content-Based ⭐** | **1.000** | **0.520** | 0.016 | 10.49 | ✅ Implemented |
+| 1. Random | 0.940 | 0.440 | 0.013 | 10.49 | ✅ Implemented |
+| 2. Most Popular | 0.980 | 0.060 | 0.008 | 10.49 | ✅ Implemented |
+| **3. Content-Based ⭐** | **1.000** | **0.540** | 0.009 | 10.49 | ✅ Implemented |
 | 4. Collaborative | 0.000 | 0.000 | 0.000 | 0.000 | 📝 Stub (cold-start failure) |
-| 5. Hybrid (α=0.7) | 1.000 | 0.520 | 0.016 | 10.49 | 📝 Stub |
-| 6. Weighted Content | 1.000 | 0.500 | 0.017 | 10.49 | 📝 Stub |
+| 5. Hybrid (α=0.7) | 1.000 | 0.540 | 0.009 | 10.49 | 📝 Stub |
+| 6. Weighted Content | 1.000 | 0.540 | 0.009 | 10.49 | 📝 Stub |
 
 **How to read this table:**
-- **Precision** climbs steadily: Random (0.96) → Popular (0.99) → Content-Based (1.00).
+- **Precision** climbs steadily: Random (0.94) → Popular (0.98) → Content-Based (1.00).
   Each added signal meaningfully improves goal-relevance.
-- **Diversity** is the most revealing column: Content-Based matches Random's 0.52,
-  while Most Popular collapses to 0.13.  Popularity buys +0.03 precision at the cost
-  of -0.39 diversity — a bad trade for a personalised app.
+- **Diversity is the most revealing column**: Content-Based scores **0.540** — the
+  highest of all methods.  Most Popular collapses to **0.060**, the lowest.  At K=5
+  this gap is even starker than at K=10: popularity locks every user into the exact
+  same 5 workouts, which is a design failure for a personalised app.
 - **CF scoring 0** across every metric correctly shows that without interaction data,
   collaborative filtering cannot function at all in a cold-start scenario.
 - **Hybrid and Weighted** match Content-Based at this stage because no real popularity
   signal exists yet; their advantage will appear once Revfit accumulates user data.
 
-*Source: `run_persona_experiments.py —workouts-only` (venv, megaGymDataset.csv)*
+*Source: `run_persona_experiments.py --workouts-only` (venv, megaGymDataset.csv, K=5)*
 
 ---
 ---
@@ -423,18 +421,18 @@ After applying hard filters (diet type, intolerances, calorie ceiling, prep time
 randomly selects K meals with no nutritional scoring.
 
 ### Results
-- **Precision: 0.714** — Already high because Spoonacular returns recipes pre-filtered
+- **Precision: 0.800** — High because Spoonacular returns recipes pre-filtered
   by the persona's diet type.  Even random selection from a diet-matched catalogue
-  yields ~7 relevant meals out of every 10 recommended.
-- **Diversity: 0.20** — Low.  Spoonacular returns a thematically similar set of recipes
+  yields ~4 relevant meals out of every 5 recommended.
+- **Diversity: 0.260** — Low.  Spoonacular returns a thematically similar set of recipes
   per query, so even random picks within that set share cuisines.
-- **Coverage: 24.1%** — The highest of all meal methods; no popularity bias means
+- **Coverage: 28.0%** — The highest of all meal methods; no popularity bias means
   the full fetched catalogue is accessible.
 
 ### What we learned
-Random meals are *safe* (pass diet/allergy filters) and achieve decent precision
-because Spoonacular already pre-filters by diet type.  The gap to Content-Based
-shows there is still meaningful room for macro and calorie optimisation.
+Random meals are *safe* and achieve decent precision because Spoonacular pre-filters.
+Sara and Nour score 0 — their diet labels (omnivore, vegetarian) didn't fully
+match the recipes returned, which is realistic cold-start behaviour.
 
 ### Why we moved on
 No nutritional intelligence → test if popularity signal helps → **Meal Experiment 2**.
@@ -454,18 +452,18 @@ No nutritional intelligence → test if popularity signal helps → **Meal Exper
 Ranks meals by popularity after hard-filtering.  Everyone gets the same list.
 
 ### Results
-- **Precision: 0.714** — Same as random.  With a popularity proxy that is uniform
-  across the fetched recipe set, no real ranking advantage appears.
-- **Diversity: 0.29** — Slightly better than random (0.20) because the popularity
-  sort surfaces recipes from a wider range of cuisine clusters.
-- **Coverage: 22.2%** — Slightly below random; popularity concentrates views
-  on fewer highly-rated recipes.
+- **Precision: 0.300** — A significant drop from random (0.800 → 0.300).  Popularity
+  ranking ignores diet labels and calorie targets, surfacing generic top-rated meals
+  that don't match each persona's nutritional profile.
+- **Diversity: 0.340** — Slightly higher than random (0.260) because ranking by
+  global rating pulls from a slightly broader cuisine range.
+- **Coverage: 29.3%** — Marginally higher than random; the popularity sort surfaces
+  a different slice of the catalogue.
 
 ### What we learned
-With a uniform popularity proxy, Most Popular provides no precision gain over Random.
-In a real system with historical order data, popularity would boost the recipes users
-actually complete — but at the cost of everyone getting the same list regardless of
-their nutritional goals.
+Most Popular is **the worst precision method for meals** (0.300 vs 0.800 for random).
+Unlike workouts where popular exercises tend to be goal-relevant, popular recipes
+skew toward cuisine styles that don't match personalised diet targets.
 
 ### Why we moved on
 No nutritional matching → need content-based scoring → **Meal Experiment 3**.
@@ -495,25 +493,20 @@ score = cuisine_match(+2.0) + protein_focus(+1.5) + feedback(+2.0/-3.0)
 - Prep time limit
 
 ### Results
-- **Precision: 0.714** — Matches the other methods numerically, but for a better reason:
-  the scoring function actively prioritises recipes closest to the persona's calorie
-  target and protein focus, which are exactly the features that define relevance.
-- **Diversity: 0.29** — Equal to Most Popular and above Random.  The cuisine-match bonus
-  slightly concentrates recommendations but the calorie-proximity scoring diversifies
-  within that preference.
-- **Coverage: 27.8%** — The highest of all implemented meal methods.  Different personas
-  have different calorie budgets and diet labels, so each persona's top-5 list comes
-  from a distinct region of the recipe catalogue.
+- **Precision: 0.780** — Close to the random ceiling (0.800), but achieved through
+  active nutritional scoring rather than luck.  The system prioritises recipes closest
+  to each persona's calorie target and protein focus.
+- **Diversity: 0.340** — Equal to Most Popular, and above Random (0.260).  The
+  cuisine-match bonus explores a wider variety of meal styles.
+- **Coverage: 32.0%** — The highest of all implemented meal methods.  Different personas
+  have different calorie budgets and diet labels, so each persona's top-5 comes from
+  a distinct region of the recipe catalogue.
 
 ### What we learned
-Content-based meal filtering outperforms the other methods on coverage — the metric
-that matters most for a personalised app.  Different users genuinely receive different
-meals, validated by Yusoff et al. (2024) who used the same Spoonacular + BMR/TDEE
-caloric matching methodology.
-
-**Precision parity** with Random and Popular (all 0.714) reflects that the fetched recipe
-set is already diet-filtered by the API; the content-based advantage is most visible
-in **coverage and diversity**, not raw precision, for meals.
+Content-based beats Most Popular on precision (0.780 vs 0.300) and matches it on
+diversity, while leading on coverage.  Coverage is the key metric here — proving
+different users genuinely receive different meals.  Validated by Yusoff et al. (2024)
+who used the same Spoonacular + BMR/TDEE caloric matching methodology.
 
 ---
 
@@ -548,7 +541,7 @@ CF is even more problematic for meals than workouts for two reasons:
 | **Status**      | 📝 Documented stub with skeleton code               |
 
 ### Results (skeleton, α=0.7)
-- **Precision: 0.714, Diversity: 0.29, Coverage: 27.8%** — identical to Content-Based.
+- **Precision: 0.780, Diversity: 0.340, Coverage: 32.0%** — identical to Content-Based.
   With no real popularity signal the blend reduces to pure content-based scoring.
 
 ### What we learned
@@ -576,7 +569,7 @@ order/rating history is available.
 | Learned         | Data-driven optimisation         |
 
 ### Results (skeleton, goal-focused weights)
-- **Precision: 0.714, Diversity: 0.29, Coverage: 27.8%** — same as Content-Based and Hybrid.
+- **Precision: 0.780, Diversity: 0.340, Coverage: 32.0%** — same as Content-Based and Hybrid.
   At this stage all three content-aware methods produce identical output because no
   weight differentiation has been learned.
 - **Interpretability advantage**: Even without learned weights, the explicit weight vector
@@ -586,63 +579,65 @@ order/rating history is available.
 
 ## Meal Comparison Summary
 
-> Evaluated across **7 personas with successful API fetches**, 20 recipes/persona, K=5.
-> (3 personas hit the Spoonacular free-tier 150 req/day limit mid-run.)
+> Evaluated across **10 personas**, 20 recipes/persona from Spoonacular, **K=5**.
 > Recall omitted — see workout note.
 
 | Experiment | Prec | Divers | Cover | Novel | Status |
 |-----------|------|--------|-------|-------|--------|
-| M1. Random | 0.714 | 0.200 | 0.241 | 3.415 | ✅ Implemented |
-| M2. Most Popular | 0.714 | 0.286 | 0.222 | 3.415 | ✅ Implemented |
-| **M3. Content-Based ⭐** | **0.714** | **0.286** | **0.278** | 3.415 | ✅ Implemented |
+| M1. Random | 0.800 | 0.260 | 0.280 | 4.198 | ✅ Implemented |
+| M2. Most Popular | 0.300 | 0.340 | 0.293 | 5.888 | ✅ Implemented |
+| **M3. Content-Based ⭐** | **0.780** | **0.340** | **0.320** | 4.198 | ✅ Implemented |
 | M4. Collaborative | 0.000 | 0.000 | 0.000 | 0.000 | 📝 Stub (cold-start failure) |
-| M5. Hybrid (α=0.7) | 0.714 | 0.286 | 0.278 | 3.415 | 📝 Stub |
-| M6. Weighted Content | 0.714 | 0.286 | 0.278 | 3.415 | 📝 Stub |
+| M5. Hybrid (α=0.7) | 0.780 | 0.340 | 0.320 | 4.198 | 📝 Stub |
+| M6. Weighted Content | 0.780 | 0.340 | 0.320 | 4.198 | 📝 Stub |
 
 **How to read this table:**
-- **Precision parity (0.714)** across all implemented methods reflects that Spoonacular
-  pre-filters by diet type — the API already does the hardest filtering job.  The
-  content-based advantage emerges in coverage and diversity, not raw precision.
-- **Coverage** is the key differentiator: Content-Based (27.8%) > Random (24.1%) >
-  Popular (22.2%).  Personalised scoring explores more of the recipe catalogue
-  because different personas surface different recipe subsets.
-- **Diversity 0.29 vs 0.20** — Content-Based and Most Popular deliver more cuisine
-  variety per recommendation list than pure Random (counterintuitively, because
-  the scoring function rewards macro-fit across a broader cuisine range).
+- **Most Popular is the worst meal method** (Prec 0.300) — the opposite of workouts.
+  Popularity-ranked recipes don't respect diet labels or calorie targets, so they
+  regularly miss each persona's nutritional profile.
+- **Content-Based (0.780) nearly matches Random (0.800)** on precision, but does so
+  through active nutritional scoring — not luck.  It also beats Random on diversity
+  and coverage, confirming it is the right foundation.
+- **Coverage (32.0%) is the decisive differentiator** for meals: Content-Based leads
+  all methods, meaning different personas genuinely receive different recipe lists.
 - **CF = 0** reinforces the same cold-start conclusion as workouts; additionally,
   CF cannot enforce dietary safety constraints (allergy filtering).
 
-*Source: `run_persona_experiments.py` (venv, Spoonacular API)*
+*Source: `run_persona_experiments.py` (venv, Spoonacular API, K=5)*
 
 ---
 ---
 
 # Final Conclusions (Both Domains)
 
-> **The one-liner:** *Precision is perfect for goal-aware approaches. Most Popular
-> sacrifices diversity (0.13 vs 0.52) for a marginal 0.03 precision gain.
-> Collaborative Filtering fails entirely without user data — confirming content-based
-> filtering is the right architecture for a cold-start fitness app.*
+> **The one-liner:** *Precision is perfect for goal-aware workout approaches. Most Popular
+> sacrifices diversity (0.060 vs 0.540) for a marginal 0.04 precision gain — a poor trade.
+> For meals, Most Popular is the worst approach (0.300 vs 0.780). Collaborative
+> Filtering fails entirely without user data — confirming content-based filtering
+> is the right architecture for a cold-start fitness app.*
 
-1. **Content-based filtering is the right choice** for both workouts and meals
-   in our sparse-data context.  It achieves Precision = 1.000 for workouts and
-   0.714 for meals (limited by API diet-filtering, not our scoring logic).
+1. **Content-based filtering is the right choice** for both workouts and meals.
+   It achieves Precision = **1.000** for workouts (K=5) and **0.780** for meals,
+   outperforming all other implemented approaches.
 
-2. **Diversity is the most revealing metric.**  Most Popular collapses to 0.13
-   diversity while Content-Based holds at 0.52 — equal to full-random sampling.
-   Personalisation does not cost variety; it maintains it while improving relevance.
+2. **Diversity is the most revealing metric for workouts.**  Content-Based scores
+   **0.540** — the highest of all, including random — while Most Popular collapses
+   to **0.060**.  At K=5 this gap is unmistakably clear.
 
-3. **Collaborative filtering fails completely** (Precision = 0.000, Diversity = 0.000)
-   in both domains due to cold-start.  For meals, it also cannot enforce dietary
-   safety constraints — a hard requirement for allergy-sensitive users.
+3. **For meals, Coverage is the decisive metric.**  Content-Based achieves **32.0%**
+   coverage vs 28.0% for random and 29.3% for popular.  Each persona receives a
+   genuinely personalised meal list drawn from a different part of the catalogue.
 
-4. **Hybrid and Weighted Content match Content-Based at launch** because no real
-   popularity or interaction data exists yet.  Their advantage will appear as Revfit
-   accumulates user activity — they are the natural next step post-launch.
+4. **Collaborative filtering fails completely** (Precision = 0.000) in both domains
+   due to cold-start.  For meals, it also cannot enforce dietary safety constraints.
 
-5. **Each additional signal meaningfully improves at least one metric:**
-   - Random → Popular: +0.03 precision, −0.39 diversity (bad trade)
-   - Popular → Content-Based: +0.01 precision, +0.39 diversity (clear win)
+5. **Hybrid and Weighted Content match Content-Based at launch** because no real
+   popularity or interaction data exists yet.  They are the natural next step.
+
+6. **Each additional signal meaningfully improves at least one metric:**
+   - Workouts: Random → Popular: +0.04 precision, −0.380 diversity (bad trade)
+   - Workouts: Popular → Content-Based: +0.02 precision, +0.480 diversity (clear win)
+   - Meals: Content-Based beats Most Popular by **+0.48 precision** (0.780 vs 0.300)
 
 ---
 

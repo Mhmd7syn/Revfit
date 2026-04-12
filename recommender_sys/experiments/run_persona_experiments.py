@@ -176,7 +176,7 @@ def run_workout_experiments(workouts, personas):
     except Exception:
         pass
 
-    TOP_K = 10
+    TOP_K = 5
     all_results = []
     all_recs_for_coverage = []   # list-of-lists (one per experiment)
 
