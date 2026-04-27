@@ -1,16 +1,18 @@
 import process_video as pv
 
 def get_active_sides(results):
-    if not (results and hasattr(results, 'pose_landmarks') and results.pose_landmarks):
+    if not results:
         return ['left', 'right']
 
-    vis_landmarks = results.pose_landmarks.landmark
+    vis_landmarks = None
+    if hasattr(results, 'pose_landmarks') and results.pose_landmarks:
+        vis_landmarks = results.pose_landmarks.landmark if hasattr(results.pose_landmarks, 'landmark') else (results.pose_landmarks[0] if isinstance(results.pose_landmarks, list) and len(results.pose_landmarks) > 0 else None)
+    if not vis_landmarks:
+        return ['left', 'right']
 
-    # Use world landmarks for metric depth if available; else fall back to image landmarks
-    if results.pose_world_landmarks:
-        depth_landmarks = results.pose_world_landmarks.landmark
-    else:
-        depth_landmarks = vis_landmarks
+    depth_landmarks = vis_landmarks
+    if hasattr(results, 'pose_world_landmarks') and results.pose_world_landmarks:
+        depth_landmarks = results.pose_world_landmarks.landmark if hasattr(results.pose_world_landmarks, 'landmark') else (results.pose_world_landmarks[0] if isinstance(results.pose_world_landmarks, list) and len(results.pose_world_landmarks) > 0 else vis_landmarks)
 
     left_z = (depth_landmarks[pv.MP_POSE.PoseLandmark.LEFT_SHOULDER].z +
                depth_landmarks[pv.MP_POSE.PoseLandmark.LEFT_HIP].z) / 2.0

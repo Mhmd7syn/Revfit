@@ -7,7 +7,18 @@ def draw_skeleton(display_frame, results, metric_configs, bad_joints, active_sid
     if active_sides is None:
         active_sides = ['left', 'right']
 
-    if not (results and hasattr(results, 'pose_landmarks') and results.pose_landmarks):
+    has_landmarks = False
+    landmarks = None
+    if results:
+        if hasattr(results, 'pose_landmarks') and results.pose_landmarks:
+            if hasattr(results.pose_landmarks, 'landmark'):
+                landmarks = results.pose_landmarks.landmark
+                has_landmarks = True
+            elif isinstance(results.pose_landmarks, list) and len(results.pose_landmarks) > 0:
+                landmarks = results.pose_landmarks[0]
+                has_landmarks = True
+
+    if not has_landmarks or landmarks is None:
         return
 
     h, w = display_frame.shape[:2]
@@ -16,8 +27,6 @@ def draw_skeleton(display_frame, results, metric_configs, bad_joints, active_sid
     good_joint_color = (0, 200, 0)
     bad_skeleton_color = (0, 0, 255)
     bad_joint_color = (0, 0, 200)
-
-    landmarks = results.pose_landmarks.landmark
 
     joint_to_landmarks = {
         'shoulder': (pv.MP_POSE.PoseLandmark.LEFT_SHOULDER, pv.MP_POSE.PoseLandmark.RIGHT_SHOULDER),

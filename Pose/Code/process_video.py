@@ -10,10 +10,27 @@ from exercise_config import FIT3D_JOINT_MAP
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 os.environ['GLOG_minloglevel'] = '2'
 
-try:
-    MP_POSE = mp.solutions.pose
-except AttributeError:
-    import mediapipe.python.solutions.pose as MP_POSE
+from mediapipe.tasks import python as mp_python
+from mediapipe.tasks.python import vision
+
+class MP_POSE_ENUM:
+    LEFT_SHOULDER = 11
+    RIGHT_SHOULDER = 12
+    LEFT_ELBOW = 13
+    RIGHT_ELBOW = 14
+    LEFT_WRIST = 15
+    RIGHT_WRIST = 16
+    LEFT_INDEX = 19
+    RIGHT_INDEX = 20
+    LEFT_HIP = 23
+    RIGHT_HIP = 24
+    LEFT_KNEE = 25
+    RIGHT_KNEE = 26
+    LEFT_ANKLE = 27
+    RIGHT_ANKLE = 28
+
+class MP_POSE:
+    PoseLandmark = MP_POSE_ENUM
 
 TCN_MODEL = None
 TCN_WINDOW_SIZE = 81
@@ -76,7 +93,11 @@ def process_video(args, frame_skip=0, frame_callback=None):
         return None
 
     cap = cv2.VideoCapture(video_path)
-    mp_pose = MP_POSE.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5, model_complexity=1)
+    base_options = mp_python.BaseOptions(model_asset_path=os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'Models', 'pose_landmarker_full.task')))
+    options = vision.PoseLandmarkerOptions(
+        base_options=base_options,
+        output_segmentation_masks=False)
+    mp_pose = vision.PoseLandmarker.create_from_options(options)
     
     collected_values = {name: {'left': [], 'right': []} for name in metric_configs}
     
@@ -97,10 +118,11 @@ def process_video(args, frame_skip=0, frame_callback=None):
 
         image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         image.flags.writeable = False
-        results = mp_pose.process(image)
+        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=image)
+        results = mp_pose.detect(mp_image)
 
-        if results.pose_world_landmarks:
-            current_raw = np.array([[lm.x, lm.y, lm.z] for lm in results.pose_world_landmarks.landmark])
+        if results.pose_world_landmarks and len(results.pose_world_landmarks) > 0:
+            current_raw = np.array([[lm.x, lm.y, lm.z] for lm in results.pose_world_landmarks[0]])
             landmark_buffer.append(current_raw)
         else:
             # Pad with last valid or zeros
@@ -194,7 +216,8 @@ def process_video(args, frame_skip=0, frame_callback=None):
                         collected_values[name][side].append(v)
 
             if frame_callback:
-                if frame_callback(frame, frame_metrics if frame_metrics else None, results if results.pose_world_landmarks else None) is False:
+                valid_results = results if (hasattr(results, 'pose_world_landmarks') and results.pose_world_landmarks and len(results.pose_world_landmarks) > 0) else None
+                if frame_callback(frame, frame_metrics if frame_metrics else None, valid_results) is False:
                     break
 
     cap.release()
