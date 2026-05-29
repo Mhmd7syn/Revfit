@@ -76,6 +76,7 @@ from experiments.exp3_content_based import ContentBasedRecommender
 from experiments.exp4_collaborative_filtering import CollaborativeFilteringRecommender
 from experiments.exp5_hybrid import HybridRecommender
 from experiments.exp6_weighted_content import WeightedContentRecommender
+from experiments.exp7_cf_vdb import CFVDBRecommender
 
 from experiments.meal_exp1_random import RandomMealRecommender
 from experiments.meal_exp2_most_popular import MostPopularMealRecommender
@@ -176,6 +177,23 @@ def run_workout_experiments(workouts, personas):
     except Exception:
         pass
 
+    # ── Exp 7: VDB-based CF (profile similarity) ────────────────────
+    # Build a single shared index with all 10 persona profiles.
+    # During evaluation we pass the current persona's name as exclude_id
+    # so it never retrieves itself as its own nearest neighbour.
+    try:
+        _pop_users = [p.user for p in personas]
+        _pop_ids   = [p.name for p in personas]
+        _cf_vdb    = CFVDBRecommender(
+            population_users=_pop_users,
+            population_ids=_pop_ids,
+            alpha=0.6,
+            cf_neighbours=3,
+        )
+        workout_experiments.append(_cf_vdb)
+    except Exception as exc:
+        print(f"  [WARN] Could not build CFVDBRecommender: {exc}")
+
     TOP_K = 5
     all_results = []
     all_recs_for_coverage = []   # list-of-lists (one per experiment)
@@ -196,9 +214,11 @@ def run_workout_experiments(workouts, personas):
             rel_set = workout_relevance_set(persona, workouts)
 
             try:
+                # Pass exclude_id for Exp 7 leave-one-out; ignored by other exps
                 recs = exp.recommend(
                     persona.user, workouts, top_k=TOP_K,
                     popularity=pop, seed=42,
+                    exclude_id=persona.name,
                 )
             except Exception:
                 recs = []
