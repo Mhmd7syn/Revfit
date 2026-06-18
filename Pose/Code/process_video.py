@@ -1,89 +1,86 @@
 import os
 import sys
-from contextlib import contextmanager
+import torch
+import cv2
+import mediapipe as mp
+import numpy as np
+from model_tcn import Temporal3DRefinementNet
+from exercise_config import FIT3D_JOINT_MAP
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 os.environ['GLOG_minloglevel'] = '2'
 
-import cv2
-import mediapipe as mp
-import numpy as np
-from geometry_checks import GeometryChecks
+from mediapipe.tasks import python as mp_python
+from mediapipe.tasks.python import vision
 
+class MP_POSE_ENUM:
+    LEFT_SHOULDER = 11
+    RIGHT_SHOULDER = 12
+    LEFT_ELBOW = 13
+    RIGHT_ELBOW = 14
+    LEFT_WRIST = 15
+    RIGHT_WRIST = 16
+    LEFT_INDEX = 19
+    RIGHT_INDEX = 20
+    LEFT_HIP = 23
+    RIGHT_HIP = 24
+    LEFT_KNEE = 25
+    RIGHT_KNEE = 26
+    LEFT_ANKLE = 27
+    RIGHT_ANKLE = 28
 
-class EMAFilter:
-    """Exponential Moving Average filter for per-metric noise reduction.
+class MP_POSE:
+    PoseLandmark = MP_POSE_ENUM
 
-    Smooths frame-level metric values before heuristic evaluation to reduce
-    MediaPipe landmark jitter (alpha=0.6 per Sim et al., 2024).
-    Formula: smoothed = alpha * current + (1 - alpha) * previous
-    """
-    def __init__(self, alpha=0.6):
-        self.alpha = alpha
-        self._state = {}  # key -> last smoothed value
+TCN_MODEL = None
+TCN_WINDOW_SIZE = 81
 
-    def smooth(self, metrics: dict) -> dict:
-        out = {}
-        for k, v in metrics.items():
-            if k not in self._state:
-                self._state[k] = v   # first observation: pass through unchanged
-            else:
-                v = self.alpha * v + (1.0 - self.alpha) * self._state[k]
-                self._state[k] = v
-            out[k] = v
-        return out
+def load_tcn_model(model_path=None):
+    global TCN_MODEL
+    if model_path is None:
+        _here = os.path.dirname(os.path.abspath(__file__))
+        model_path = os.path.join(_here, "..", "Models", "best_tcn_model.pt")
+    model_path = os.path.abspath(model_path)
 
-try:
-    MP_POSE = mp.solutions.pose
-except AttributeError:
-    import mediapipe.python.solutions.pose as MP_POSE
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+    model = Temporal3DRefinementNet(num_joints_in=33, num_joints_out=25)
+    
+    # Handle both full state_dict and jit or path issues
+    if os.path.exists(model_path):
+        state_dict = torch.load(model_path, map_location=device)
+        # Handle "compiled" models or different state_dict structures
+        new_state_dict = {}
+        for k, v in state_dict.items():
+            name = k.replace('_orig_mod.', '') # Remove torch.compile prefix if present
+            new_state_dict[name] = v
+        model.load_state_dict(new_state_dict)
+        model.to(device)
+        model.eval()
+        TCN_MODEL = model
+        print(f"TCN model loaded from {model_path}")
+    else:
+        print(f"Warning: TCN model not found at {model_path}. Performance will be degraded.")
 
-def get_landmark_coords(world_landmarks, vis_landmarks, joint_name, side):
-    """Returns (x, y, z) from world_landmarks for the given joint/side,
-    using vis_landmarks (pose_landmarks) for the visibility gate.
-    Returns the string 'vertical'/'horizontal' for virtual reference points."""
+def get_landmark_coords_from_fit3d(refined_pose, joint_name, side):
+    """Returns (x, y, z) from refined 25-joint pose."""
     if joint_name.lower() in ['vertical', 'horizontal']:
         return joint_name.lower()
-
-    attr_name = f"{side}_{joint_name.upper()}"
-    if hasattr(MP_POSE.PoseLandmark, attr_name):
-        idx = getattr(MP_POSE.PoseLandmark, attr_name)
-        if vis_landmarks[idx].visibility < 0.5:
-            return None
-        lm = world_landmarks[idx]
-        return np.array([lm.x, lm.y, lm.z])
-    return None
-
-
-POSE_MODEL = None
-
-
-def init_worker():
-    """Initializes the MediaPipe Pose model once per worker process."""
-    global POSE_MODEL
-    POSE_MODEL = MP_POSE.Pose(
-        min_detection_confidence=0.5,
-        min_tracking_confidence=0.5,
-        model_complexity=2,
-        static_image_mode=False
-    )
-
+    
+    indices = FIT3D_JOINT_MAP.get(joint_name.lower())
+    if indices is None:
+        return None
+    
+    idx = indices[0] if side.upper() == 'LEFT' else indices[1]
+    if idx is None:
+        return None
+        
+    return refined_pose[idx]
 
 def process_video(args, frame_skip=0, frame_callback=None):
-    """
-    Process a single video to extract per-metric min/max values.
-
-    args: (video_path, exercise_name, metric_configs)
-    frame_skip: skip N frames between each processed frame (0 = every frame, 2 = every 3rd)
-    frame_callback: optional callback(frame, frame_metrics, results) called per processed frame.
-                    Return False to stop early.
-    """
-    global POSE_MODEL
-    if POSE_MODEL is None:
-        init_worker()
-
-    pose = POSE_MODEL
+    global TCN_MODEL
+    if TCN_MODEL is None:
+        load_tcn_model()
 
     if len(args) == 4:
         video_path, exercise_name, metric_configs, fs = args
@@ -96,17 +93,24 @@ def process_video(args, frame_skip=0, frame_callback=None):
         return None
 
     cap = cv2.VideoCapture(video_path)
+    base_options = mp_python.BaseOptions(model_asset_path=os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'Models', 'pose_landmarker_full.task')))
+    options = vision.PoseLandmarkerOptions(
+        base_options=base_options,
+        output_segmentation_masks=False)
+    mp_pose = vision.PoseLandmarker.create_from_options(options)
+    
     collected_values = {name: {'left': [], 'right': []} for name in metric_configs}
-
-    # EMA smoother: only active in inference mode (when a frame_callback is provided).
-    # The analysis/data-collection path uses percentile-based noise rejection instead.
-    ema = EMAFilter(alpha=0.6) if frame_callback is not None else None
+    
+    # Buffer for TCN: stores (33, 3) raw world landmarks
+    landmark_buffer = []
+    
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    mid_idx = TCN_WINDOW_SIZE // 2
 
     raw_frame_idx = 0
     while cap.isOpened():
         ret, frame = cap.read()
-        if not ret:
-            break
+        if not ret: break
 
         raw_frame_idx += 1
         if frame_skip > 0 and raw_frame_idx % (frame_skip + 1) != 0:
@@ -114,127 +118,117 @@ def process_video(args, frame_skip=0, frame_callback=None):
 
         image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         image.flags.writeable = False
+        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=image)
+        results = mp_pose.detect(mp_image)
 
-        results = pose.process(image)
+        if results.pose_world_landmarks and len(results.pose_world_landmarks) > 0:
+            current_raw = np.array([[lm.x, lm.y, lm.z] for lm in results.pose_world_landmarks[0]])
+            landmark_buffer.append(current_raw)
+        else:
+            # Pad with last valid or zeros
+            last = landmark_buffer[-1] if landmark_buffer else np.zeros((33, 3))
+            landmark_buffer.append(last)
 
-        frame_metrics = {}
-        if results.pose_world_landmarks and results.pose_landmarks:
-            world_lms = results.pose_world_landmarks.landmark
-            vis_lms = results.pose_landmarks.landmark
-            frame_keypoints = {'LEFT': {}, 'RIGHT': {}}
+        # Maintain buffer size
+        if len(landmark_buffer) > TCN_WINDOW_SIZE:
+            landmark_buffer.pop(0)
 
-            nose_idx = MP_POSE.PoseLandmark.NOSE
-            nose_coords = None
-            if vis_lms[nose_idx].visibility > 0.5:
-                lm_nose = world_lms[nose_idx]
-                nose_coords = np.array([lm_nose.x, lm_nose.y, lm_nose.z])
+        # We need a full window for TCN, or we pad for initial frames
+        if TCN_MODEL and len(landmark_buffer) > 0:
+            # Padding for short/start sequences
+            if len(landmark_buffer) < TCN_WINDOW_SIZE:
+                pad_left = TCN_WINDOW_SIZE - len(landmark_buffer)
+                window = np.pad(landmark_buffer, ((pad_left, 0), (0, 0), (0, 0)), mode='edge')
+            else:
+                window = np.array(landmark_buffer)
 
-            target_joints = ['shoulder', 'elbow', 'wrist', 'hip', 'knee', 'ankle', 'index']
-
-            for side in ['LEFT', 'RIGHT']:
-                for name in target_joints:
-                    coords = get_landmark_coords(world_lms, vis_lms, name, side)
-                    if coords is not None:
-                        frame_keypoints[side][name] = coords
-                if nose_coords is not None:
-                    frame_keypoints[side]['nose'] = nose_coords
-
-            # Pre-compute torso length per side for distance normalization
-            torso_lengths = {}
-            for side in ['LEFT', 'RIGHT']:
-                sh = frame_keypoints[side].get('shoulder')
-                hp = frame_keypoints[side].get('hip')
-                if sh is not None and hp is not None:
-                    torso_lengths[side] = float(np.linalg.norm(sh - hp))
-                else:
-                    torso_lengths[side] = 1.0  # fallback: no normalization
-
+            # Pre-feed to TCN
+            with torch.no_grad():
+                # 1. Normalization: Root-relative (centered on hips)
+                # MP Joints 23 (L Hip), 24 (R Hip)
+                mp_root = (window[:, 23, :] + window[:, 24, :]) / 2.0
+                norm_window = window - mp_root[:, np.newaxis, :]
+                
+                # 2. Sequence-level scale normalization (median spine length)
+                # MP Joints 11 (L Shoulder), 12 (R Shoulder)
+                mp_shoulders = (norm_window[:, 11, :] + norm_window[:, 12, :]) / 2.0
+                mp_spine_len_all = np.linalg.norm(mp_shoulders, axis=-1)
+                mp_spine_len_median = max(1e-5, float(np.median(mp_spine_len_all)))
+                
+                norm_window = norm_window / mp_spine_len_median
+                
+                tens = torch.from_numpy(norm_window).float().unsqueeze(0).to(device)
+                refined_full = TCN_MODEL(tens).squeeze(0).cpu().numpy() # (T, 25, 3)
+                
+                # 3. Unscale to restore original metric space
+                refined_full = refined_full * mp_spine_len_median
+                
+                refined_pose = refined_full[mid_idx if len(landmark_buffer) >= TCN_WINDOW_SIZE else -1]
+                
+            frame_metrics = {}
+            # Compute metrics using the refined Pose (25 joints)
             for metric_name, config in metric_configs.items():
-                metric_type = config.get('type', 'angle')
                 joints = config.get('joints', [])
-
+                metric_type = config.get('type', 'angle')
+                
                 for side in ['LEFT', 'RIGHT']:
                     points = []
-                    valid_side = True
-
+                    valid = True
                     for j in joints:
-                        if j in ['vertical', 'horizontal']:
-                            points.append(j)
-                        elif j in frame_keypoints[side]:
-                            points.append(frame_keypoints[side][j])
-                        else:
-                            valid_side = False
-                            break
-
-                    if not valid_side:
-                        continue
-
+                        p = get_landmark_coords_from_fit3d(refined_pose, j, side)
+                        if p is None:
+                            valid = False; break
+                        points.append(p)
+                    
+                    if not valid: continue
+                    
                     value = None
-                    if metric_type == 'angle':
-                        if len(points) == 3:
-                            p0, p1, p2 = points[0], points[1], points[2]
-
-                            if isinstance(p0, str):
-                                p0 = np.array([p1[0], p1[1] - 0.5, p1[2]]) if p0 == 'vertical' else np.array([p1[0] + 0.5, p1[1], p1[2]])
-                            if isinstance(p2, str):
-                                p2 = np.array([p1[0], p1[1] - 0.5, p1[2]]) if p2 == 'vertical' else np.array([p1[0] + 0.5, p1[1], p1[2]])
-
-                            if not any(type(p) is str for p in (p0, p1, p2)):
-                                value = GeometryChecks.calculate_angle(p0, p1, p2)
-
-                    elif metric_type == 'horizontal_distance':
-                        if len(points) >= 2:
-                            raw = GeometryChecks.calculate_horizontal_distance(points[0], points[1])
-                            torso = max(torso_lengths[side], 1e-6)
-                            value = raw / torso
-
-                    elif metric_type == 'vertical_distance':
-                        if len(points) >= 2:
-                            raw = GeometryChecks.calculate_vertical_distance(points[0], points[1])
-                            torso = max(torso_lengths[side], 1e-6)
-                            value = raw / torso
-
-                    elif metric_type == 'distance_from_line':
-                        if len(points) == 3:
-                            raw = GeometryChecks.distance_from_line(points[0], points[1], points[2])
-                            torso = max(torso_lengths[side], 1e-6)
-                            value = raw / torso
-
+                    if metric_type == 'angle' and len(points) == 3:
+                        # Follow notebook calculate_angle_3d logic
+                        a, b, c = points[0], points[1], points[2]
+                        if isinstance(a, str): # vertical/horizontal
+                            a = np.array([b[0], b[1] - 0.5, b[2]]) if a == 'vertical' else np.array([b[0] + 0.5, b[1], b[2]])
+                        if isinstance(c, str):
+                            c = np.array([b[0], b[1] - 0.5, b[2]]) if c == 'vertical' else np.array([b[0] + 0.5, b[1], b[2]])
+                        
+                        ba = a - b
+                        bc = c - b
+                        n1, n2 = np.linalg.norm(ba), np.linalg.norm(bc)
+                        if n1 > 1e-6 and n2 > 1e-6:
+                            cos_a = np.dot(ba, bc) / (n1 * n2)
+                            value = np.degrees(np.arccos(np.clip(cos_a, -1.0, 1.0)))
+                            
+                    elif metric_type == 'horizontal_distance' and len(points) >= 2:
+                        value = np.abs(points[0][0] - points[1][0]) / 0.5 # Normalization placeholder
+                    elif metric_type == 'vertical_distance' and len(points) >= 2:
+                        value = np.abs(points[0][1] - points[1][1]) / 0.5
+                    elif metric_type == 'distance_from_line' and len(points) == 3:
+                        p0, p1, p2 = points[0], points[1], points[2]
+                        value = np.linalg.norm(np.cross(p1 - p0, p0 - p2)) / np.linalg.norm(p1 - p0)
+                    
                     if value is not None:
                         frame_metrics[f"{metric_name}_{side.lower()}"] = value
 
-        if frame_metrics:
-            for key, value in frame_metrics.items():
-                parts = key.rsplit('_', 1)
-                if len(parts) == 2:
-                    metric_name, side = parts
-                    if metric_name in collected_values and side in collected_values[metric_name]:
-                        collected_values[metric_name][side].append(value)
+            if frame_metrics:
+                for k, v in frame_metrics.items():
+                    name, side = k.rsplit('_', 1)
+                    if name in collected_values:
+                        collected_values[name][side].append(v)
 
-        if frame_callback:
-            # Apply EMA smoothing before passing metrics to the inference callback.
-            smoothed_metrics = ema.smooth(frame_metrics) if (ema and frame_metrics) else frame_metrics
-            if frame_callback(frame, smoothed_metrics if smoothed_metrics else None, results if results.pose_world_landmarks else None) is False:
-                break
+            if frame_callback:
+                valid_results = results if (hasattr(results, 'pose_world_landmarks') and results.pose_world_landmarks and len(results.pose_world_landmarks) > 0) else None
+                if frame_callback(frame, frame_metrics if frame_metrics else None, valid_results) is False:
+                    break
 
     cap.release()
-
-    result = {
-        'video': os.path.basename(video_path),
-        'exercise': exercise_name,
-    }
-
-    has_data = False
-    for metric_name, sides in collected_values.items():
-        for side, values in sides.items():
-            if values:
-                has_data = True
-                arr = np.array(values)
-                # Use robust percentile-based min/max to ignore 1-frame glitches
-                result[f"{metric_name}_{side}_min"] = float(np.percentile(arr, 5))
-                result[f"{metric_name}_{side}_max"] = float(np.percentile(arr, 95))
-            else:
-                result[f"{metric_name}_{side}_min"] = None
-                result[f"{metric_name}_{side}_max"] = None
-
-    return result if has_data else None
+    has_data = any(any(s) for m in collected_values.values() for s in m.values())
+    
+    if not has_data: return None
+    
+    result = {'video': os.path.basename(video_path), 'exercise': exercise_name}
+    for m, sides in collected_values.items():
+        for side, vals in sides.items():
+            if vals:
+                result[f"{m}_{side}_min"] = float(np.percentile(vals, 5))
+                result[f"{m}_{side}_max"] = float(np.percentile(vals, 95))
+    return result

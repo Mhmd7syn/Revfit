@@ -8,7 +8,7 @@ LEVEL_ORDER = {
 }
 
 GOAL_TYPES = {"fat_loss", "muscle_gain", "maintenance", "endurance"}
-FITNESS_LEVELS = {"beginner", "intermediate", "expert"}
+FITNESS_LEVELS = {"beginner", "intermediate", "advanced"}
 DIET_TYPES = {"omnivore", "vegetarian", "vegan", "paleo", "ketogenic", "gluten free"}
 LOCATION_TYPES = {"home", "gym", "both"}
 
