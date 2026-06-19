@@ -285,7 +285,7 @@ class _PoseAnalysisScreenState extends State<PoseAnalysisScreen> {
               color: AppColors.darkBg,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: _selectedFilePath != null
+                color: (_selectedFilePath != null || _selectedFileBytes != null)
                     ? AppColors.primary.withOpacity(0.5)
                     : const Color(0xFF2E2E3E),
               ),
@@ -294,10 +294,10 @@ class _PoseAnalysisScreenState extends State<PoseAnalysisScreen> {
               child: Column(
                 children: [
                   Icon(
-                    _selectedFilePath != null
+                    (_selectedFilePath != null || _selectedFileBytes != null)
                         ? Icons.check_circle_rounded
                         : Icons.cloud_upload_rounded,
-                    color: _selectedFilePath != null
+                    color: (_selectedFilePath != null || _selectedFileBytes != null)
                         ? AppColors.successColor
                         : AppColors.textMuted,
                     size: 36,
@@ -306,13 +306,13 @@ class _PoseAnalysisScreenState extends State<PoseAnalysisScreen> {
                   Text(
                     _selectedFileName ?? 'Tap to select a video file',
                     style: TextStyle(
-                      color: _selectedFilePath != null
+                      color: (_selectedFilePath != null || _selectedFileBytes != null)
                           ? AppColors.textPrimary
                           : AppColors.textMuted,
                       fontSize: 14,
                     ),
                   ),
-                  if (_selectedFilePath == null)
+                  if (_selectedFilePath == null && _selectedFileBytes == null)
                     const Padding(
                       padding: EdgeInsets.only(top: 4),
                       child: Text(
