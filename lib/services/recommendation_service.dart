@@ -1,7 +1,32 @@
 // lib/services/recommendation_service.dart
+//
+// Updated for Content-Based Filtering architecture (Experiment 3).
+// Workout/meal recommend endpoints now use query parameters instead of
+// JSON bodies. All user constraints come from the server-side session.
+
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'dio_helper.dart';
+
+/// Thrown when the session_id is not found on the server (HTTP 404).
+class SessionExpiredException implements Exception {
+  final String sessionId;
+  SessionExpiredException(this.sessionId);
+
+  @override
+  String toString() => 'Session "$sessionId" has expired or does not exist.';
+}
+
+/// Thrown when Spoonacular rate limit is exceeded (HTTP 429).
+class RateLimitExceededException implements Exception {
+  final String message;
+  RateLimitExceededException(
+      [this.message =
+          'Spoonacular API rate limit exceeded. Please try again later.']);
+
+  @override
+  String toString() => message;
+}
 
 class RecommendationService {
   // ------------------------------------------------------------------ //
@@ -104,17 +129,23 @@ class RecommendationService {
   // ------------------------------------------------------------------ //
 
   /// Get top-K personalised workout recommendations.
+  ///
+  /// Uses Content-Based Filtering — all user constraints are read from
+  /// the server-side session. Only `top_k` is passed as a query param.
   Future<List<dynamic>> getWorkoutPlan(
     String sessionId, {
     int topK = 5,
   }) async {
     try {
       final response = await DioHelper.postData(
-        path: _recommendWorkouts(sessionId),
-        data: {'top_k': topK},
+        path: '${_recommendWorkouts(sessionId)}?top_k=$topK',
+        data: {},
       );
       // Response is a List of workout objects
       return response.data as List;
+    } on DioException catch (e) {
+      _handleApiError(e, sessionId);
+      rethrow;
     } catch (e) {
       throw Exception('Failed to get workout recommendations: $e');
     }
@@ -127,11 +158,14 @@ class RecommendationService {
   }) async {
     try {
       final response = await DioHelper.postData(
-        path: _workoutPlan(sessionId),
-        data: {'top_k': topK},
+        path: '${_workoutPlan(sessionId)}?top_k=$topK',
+        data: {},
       );
       // Response is a WorkoutPlanResponse with days → exercises
       return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      _handleApiError(e, sessionId);
+      rethrow;
     } catch (e) {
       throw Exception('Failed to get structured workout plan: $e');
     }
@@ -200,22 +234,30 @@ class RecommendationService {
   // ------------------------------------------------------------------ //
 
   /// Fetch and filter meals (no scoring).
+  ///
+  /// Uses query parameters — no request body needed.
   Future<Map<String, dynamic>> fetchMeals(
     String sessionId, {
     int numFetch = 20,
   }) async {
     try {
       final response = await DioHelper.postData(
-        path: _fetchMeals(sessionId),
-        data: {'num_fetch': numFetch},
+        path: '${_fetchMeals(sessionId)}?num_fetch=$numFetch',
+        data: {},
       );
       return response.data;
+    } on DioException catch (e) {
+      _handleApiError(e, sessionId);
+      rethrow;
     } catch (e) {
       throw Exception('Failed to fetch meals: $e');
     }
   }
 
   /// Get top-K personalised meal recommendations.
+  ///
+  /// Uses Content-Based Filtering — all user constraints are read from
+  /// the server-side session. Parameters are passed as query params.
   Future<List<dynamic>> recommendMeals(
     String sessionId, {
     int topK = 5,
@@ -223,10 +265,13 @@ class RecommendationService {
   }) async {
     try {
       final response = await DioHelper.postData(
-        path: _recommendMeals(sessionId),
-        data: {'top_k': topK, 'num_fetch': numFetch},
+        path: '${_recommendMeals(sessionId)}?top_k=$topK&num_fetch=$numFetch',
+        data: {},
       );
       return response.data as List;
+    } on DioException catch (e) {
+      _handleApiError(e, sessionId);
+      rethrow;
     } catch (e) {
       throw Exception('Failed to recommend meals: $e');
     }
@@ -247,6 +292,8 @@ class RecommendationService {
   // ------------------------------------------------------------------ //
 
   /// Generate a full daily meal plan.
+  ///
+  /// Uses query parameters — no request body needed.
   Future<Map<String, dynamic>> generateMealPlan(
     String sessionId, {
     int topK = 5,
@@ -254,11 +301,14 @@ class RecommendationService {
   }) async {
     try {
       final response = await DioHelper.postData(
-        path: _generateMealPlan(sessionId),
-        data: {'top_k': topK, 'num_fetch': numFetch},
+        path: '${_generateMealPlan(sessionId)}?top_k=$topK&num_fetch=$numFetch',
+        data: {},
       );
       // Returns MealPlanResponse as JSON
       return response.data;
+    } on DioException catch (e) {
+      _handleApiError(e, sessionId);
+      rethrow;
     } catch (e) {
       throw Exception('Failed to generate meal plan: $e');
     }
@@ -337,5 +387,35 @@ class RecommendationService {
     } catch (e) {
       throw Exception('Failed to get feedback store summary: $e');
     }
+  }
+
+  // ------------------------------------------------------------------ //
+  //  Error Handling Helpers                                             //
+  // ------------------------------------------------------------------ //
+
+  /// Inspect a DioException for known API error patterns and throw
+  /// domain-specific exceptions.
+  static Never _handleApiError(DioException e, [String? sessionId]) {
+    final statusCode = e.response?.statusCode;
+
+    // Session not found
+    if (statusCode == 404 && sessionId != null) {
+      throw SessionExpiredException(sessionId);
+    }
+
+    // Spoonacular rate limit exceeded
+    if (statusCode == 429) {
+      final detail = e.response?.data is Map
+          ? (e.response!.data['detail'] as String? ?? '')
+          : '';
+      throw RateLimitExceededException(
+        detail.isNotEmpty
+            ? detail
+            : 'API rate limit exceeded. Please try again later.',
+      );
+    }
+
+    // Re-throw for unhandled cases
+    throw e;
   }
 }

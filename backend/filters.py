@@ -1,3 +1,28 @@
+"""
+filters.py — Content-Based Filtering scoring engine (Experiment 3).
+
+This module is the canonical implementation of the Revfit content-based
+recommender system, validated in experiments/exp3_content_based.py (workouts)
+and experiments/meal_exp3_content_based.py (meals).
+
+Workout Scoring Signals
+-----------------------
+  - Goal-alignment weight: 0.5 – 3.0 per workout_type
+  - Workout-specific feedback: +0.7 × preference per like/dislike
+  - Workout-type preference: accumulated via feedback (weak signal)
+  - Rating bonus: +0.2 × rating
+  Hard filters: equipment match + fitness level ≤ user's level
+
+Meal Scoring Signals
+--------------------
+  - Cuisine match:       +2.0 (if recipe.cuisine == user.preferred_cuisine)
+  - Protein focus match: +1.5 (if protein_g falls in user's target range)
+  - Feedback memory:     +2.0 (liked) / -3.0 (disliked)
+  - Calorie proximity:   +0.0 to +1.0 (linear decay from per-meal target)
+  - Rating bonus:        +0.2 × rating
+  Hard filters: diet type, allergens, calorie ceiling (120%), prep time
+"""
+
 from constants import LEVEL_ORDER, GOAL_TYPES
 from plan_type import build_workout_plan, WorkoutPlan
 

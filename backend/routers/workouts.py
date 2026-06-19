@@ -1,10 +1,19 @@
 """
-routers/workouts.py — Workout endpoints.
+routers/workouts.py — Workout endpoints (Content-Based Filtering).
 
 GET  /workouts/                              → list all workouts (with filters)
 GET  /workouts/{workout_id}                  → get single workout
 POST /workouts/recommend/{session_id}        → get personalised recommendations
 GET  /workouts/filter                        → hard-filter workouts for a session
+
+Recommendation Architecture
+---------------------------
+Uses Content-Based Filtering (Experiment 3) as the production scoring engine:
+  hard_filter_workouts → score_workout → sort → top-K
+
+All user constraints (goal, equipment, fitness level, feedback) are read from
+the active session profile via state.get_user(session_id). No request body
+is required for the recommend endpoint — only the session token.
 """
 
 import os
@@ -15,7 +24,6 @@ from workouts import WorkoutItem, load_workouts_csv
 from filters import recommend_workouts, hard_filter_workouts, score_workout, recommend_workout_plan
 from schemas import (
     WorkoutResponse,
-    WorkoutRecommendRequest,
     WorkoutPlanResponse,
     WorkoutPlanDayResponse,
 )
@@ -100,10 +108,24 @@ def get_workout(workout_id: str):
 
 
 @router.post("/recommend/{session_id}", response_model=List[WorkoutResponse])
-def recommend(session_id: str, body: WorkoutRecommendRequest):
+def recommend(
+    session_id: str,
+    top_k: int = Query(5, ge=1, le=50),
+):
     """
     Return top-K personalised workout recommendations for a user session.
-    Applies hard filters (equipment, level) then scores by goal + feedback.
+
+    Uses the Content-Based Filtering pipeline (Experiment 3):
+      1. Hard filters — remove workouts that don't match user's equipment
+         or exceed their fitness level.
+      2. Goal-weighted scoring — workout_type receives a weight based on
+         the user's goal (e.g. Strength: 3.0 for muscle_gain).
+      3. Feedback signals — user likes/dislikes with exponential decay.
+      4. Rating bonus — +0.2 × rating.
+      5. Sort and return top-K.
+
+    All user constraints are read from the session profile — no request
+    body is required.
     """
     user = state.get_user(session_id)
     if not user:
@@ -112,7 +134,7 @@ def recommend(session_id: str, body: WorkoutRecommendRequest):
     if not _ALL_WORKOUTS:
         raise HTTPException(status_code=503, detail="Workout dataset not loaded. Check megaGymDataset.csv path.")
 
-    top = recommend_workouts(_ALL_WORKOUTS, user, top_k=body.top_k)
+    top = recommend_workouts(_ALL_WORKOUTS, user, top_k=top_k)
     return [_w_to_response(w, score_workout(w, user)) for w in top]
 
 
@@ -131,11 +153,16 @@ def filter_workouts(session_id: str):
 
 
 @router.post("/plan/{session_id}", response_model=WorkoutPlanResponse)
-def workout_plan(session_id: str, body: WorkoutRecommendRequest):
+def workout_plan(
+    session_id: str,
+    top_k: int = Query(5, ge=1, le=50),
+):
     """
     Return a structured day-by-day workout plan.
     Each day contains multiple exercises (many-to-one: workouts → day).
     Uses user.plan_type to determine the split (full_body / ppl / upper_lower).
+
+    All user constraints are read from the session profile.
     """
     user = state.get_user(session_id)
     if not user:

@@ -34,8 +34,8 @@ from inference import (
     create_info_bar,
     draw_overlays,
     get_active_sides,
-    update_rep_count,
 )
+from repetition_counter import RepetitionCounter
 from exercise_config import EXERCISE_TO_CONFIG, JOINT_DEFINITIONS
 import process_video as pv
 
@@ -156,6 +156,9 @@ def _write_correction_video(
     orig_h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     cap.release()
 
+    # Initialize the new RepetitionCounter
+    rep_counter = RepetitionCounter(exercise_name, metric_configs, ref)
+
     # State for rep counting and feedback collection
     state = {
         "paused": False,
@@ -166,24 +169,8 @@ def _write_correction_video(
         "bar_width": None,
         "window_created": False,
         "rep_count": 0,
-        "rep_phase": {"left": "extended", "right": "extended"},
-        "rep_side_counts": {"left": 0, "right": 0},
-        "rep_metric": None,
-        "rep_low_thresh": None,
-        "rep_high_thresh": None,
+        "rep_counter": rep_counter,
     }
-
-    # Identify the primary rep-counting metric (same logic as inference.py)
-    for _m, _mdef in metric_configs.items():
-        if _mdef.get("type", "angle") == "angle" and ref.get(f"{_m}_min") is not None:
-            _r_min = ref[f"{_m}_min"]
-            _r_max = ref[f"{_m}_max"]
-            _span = _r_max - _r_min
-            if _span > 0:
-                state["rep_metric"] = _m
-                state["rep_low_thresh"] = _r_min + 0.25 * _span
-                state["rep_high_thresh"] = _r_max - 0.25 * _span
-            break
 
     # Collect annotated frames
     annotated_frames: list = []
@@ -201,7 +188,8 @@ def _write_correction_video(
             current_metrics, metric_configs, ref, state, active_sides
         )
         if current_metrics:
-            update_rep_count(current_metrics, state, active_sides)
+            state['rep_counter'].add_frame(current_metrics, active_sides)
+            state['rep_count'] = state['rep_counter'].get_rep_count()
 
         # Draw skeleton overlay on a copy
         display = frame.copy()

@@ -1,6 +1,17 @@
 """
 recommender.py — Unified entry point for the Revfit recommender system.
 
+Architecture: Content-Based Filtering (Experiment 3)
+-----------------------------------------------------
+This module delegates to filters.py which implements the production
+content-based scoring pipeline validated in the recommender system
+evaluation (experiments/exp3_content_based.py).
+
+Workout pipeline:  hard_filter_workouts → score_workout → sort → top-K
+Meal pipeline:     hard_filter_meals    → score_meal    → sort → top-K
+
+Scoring signals are documented in filters.py.
+
 Usage
 -----
 from recommender import recommend, recommend_muscle
