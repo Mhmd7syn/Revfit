@@ -2,6 +2,7 @@
 routers/pose.py — Pose-analysis endpoints.
 
 POST /pose/analyze/{session_id}   → upload video, run analysis, return results
+POST /pose/classify/{session_id}  → upload video, classify exercise via ensemble
 GET  /pose/history/{session_id}   → retrieve past analysis results
 GET  /pose/exercises              → list supported exercise names
 """
@@ -13,8 +14,9 @@ from typing import List
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
-from schemas import PoseAnalysisResponse
+from schemas import PoseAnalysisResponse, ExerciseClassificationResponse
 from pose_analysis import analyze_video, list_supported_exercises, POSE_OUTPUT_DIR
+from exercise_classifier import classify_exercise, EXERCISE_CLASSES
 import state
 
 router = APIRouter()
@@ -24,6 +26,54 @@ router = APIRouter()
 def exercises():
     """Return the list of exercise names that the Pose module supports."""
     return list_supported_exercises()
+
+
+@router.get("/classifier/classes", response_model=List[str])
+def classifier_classes():
+    """Return the 20-class taxonomy used by the exercise classifier."""
+    return EXERCISE_CLASSES
+
+
+@router.post("/classify/{session_id}", response_model=ExerciseClassificationResponse)
+async def classify(
+    session_id: str,
+    video: UploadFile = File(..., description="Short video clip for exercise detection"),
+):
+    """
+    Upload a short video clip and receive the predicted exercise class.
+
+    Uses a 50/50 weighted ensemble of VideoMAE (ViT) and X3D-M (3D CNN).
+    The response contains the predicted exercise name and the ensemble
+    confidence score.  This is Phase 1 classification only — no form
+    evaluation or skeletal analysis is performed.
+    """
+    # Validate session
+    user = state.get_user(session_id)
+    if not user:
+        raise HTTPException(status_code=404, detail=f"Session '{session_id}' not found")
+
+    # Save the upload to a temp file
+    suffix = os.path.splitext(video.filename or "upload.mp4")[1] or ".mp4"
+    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
+    try:
+        shutil.copyfileobj(video.file, tmp)
+        tmp.close()
+
+        # Run ensemble classification
+        predicted_exercise, confidence = classify_exercise(tmp.name)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+    except RuntimeError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+    finally:
+        # Clean up temp upload
+        if os.path.exists(tmp.name):
+            os.unlink(tmp.name)
+
+    return ExerciseClassificationResponse(
+        predicted_exercise=predicted_exercise,
+        confidence=confidence,
+    )
 
 
 @router.post("/analyze/{session_id}", response_model=PoseAnalysisResponse)
@@ -92,3 +142,4 @@ def history(session_id: str):
         raise HTTPException(status_code=404, detail=f"Session '{session_id}' not found")
 
     return state.get_pose_results(session_id)
+

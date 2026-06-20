@@ -16,7 +16,8 @@ class PoseAnalysisScreen extends StatefulWidget {
   State<PoseAnalysisScreen> createState() => _PoseAnalysisScreenState();
 }
 
-class _PoseAnalysisScreenState extends State<PoseAnalysisScreen> {
+class _PoseAnalysisScreenState extends State<PoseAnalysisScreen>
+    with SingleTickerProviderStateMixin {
   // ── state ─────────────────────────────────────────────────────────────
   String? _sessionId;
   List<String> _exercises = [];
@@ -30,19 +31,36 @@ class _PoseAnalysisScreenState extends State<PoseAnalysisScreen> {
   Map<String, dynamic>? _result;
   String? _errorMsg;
 
+  // ── Phase 1 classifier state ──────────────────────────────────────────
+  bool _isClassifying = false;
+  String? _classifiedExercise;
+  double? _classificationConfidence;
+  bool _showManualOverride = false;
+  String? _classifyError;
+
+  /// Confidence threshold below which we prompt manual override.
+  static const double _confidenceThreshold = 0.70;
+
   VideoPlayerController? _videoController;
 
   final _recommendationService = RecommendationService();
+
+  late AnimationController _pulseController;
 
   // ── lifecycle ─────────────────────────────────────────────────────────
   @override
   void initState() {
     super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat(reverse: true);
     _loadExercises();
   }
 
   @override
   void dispose() {
+    _pulseController.dispose();
     _videoController?.dispose();
     super.dispose();
   }
@@ -80,7 +98,61 @@ class _PoseAnalysisScreenState extends State<PoseAnalysisScreen> {
         _selectedFileBytes = file.bytes;
         _result = null;
         _errorMsg = null;
+        // Reset classification state on new video pick
+        _classifiedExercise = null;
+        _classificationConfidence = null;
+        _showManualOverride = false;
+        _classifyError = null;
       });
+
+      // Automatically classify the video after picking
+      _classifyVideo();
+    }
+  }
+
+  Future<void> _classifyVideo() async {
+    setState(() {
+      _isClassifying = true;
+      _classifyError = null;
+    });
+
+    try {
+      await _ensureSession();
+      final res = await PoseService.classifyExercise(
+        sessionId: _sessionId!,
+        videoFilePath: _selectedFilePath,
+        videoBytes: _selectedFileBytes,
+        videoFileName: _selectedFileName,
+      );
+
+      if (mounted) {
+        final predicted = res['predicted_exercise'] as String;
+        final confidence = (res['confidence'] as num).toDouble();
+
+        setState(() {
+          _classifiedExercise = predicted;
+          _classificationConfidence = confidence;
+          _isClassifying = false;
+
+          if (confidence >= _confidenceThreshold) {
+            // High confidence → auto-populate exercise
+            _selectedExercise = predicted;
+            _showManualOverride = false;
+          } else {
+            // Low confidence → show warning and expose dropdown
+            _selectedExercise = predicted;
+            _showManualOverride = true;
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isClassifying = false;
+          _classifyError = 'Auto-detect failed. Please select manually.';
+          _showManualOverride = true;
+        });
+      }
     }
   }
 
@@ -162,6 +234,9 @@ class _PoseAnalysisScreenState extends State<PoseAnalysisScreen> {
     }
   }
 
+  String _titleCase(String s) =>
+      s.split(' ').map((w) => '${w[0].toUpperCase()}${w.substring(1)}').join(' ');
+
   // ── build ─────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
@@ -173,8 +248,8 @@ class _PoseAnalysisScreenState extends State<PoseAnalysisScreen> {
             physics: const BouncingScrollPhysics(),
             slivers: [
               SliverToBoxAdapter(child: _buildAppBar()),
-              SliverToBoxAdapter(child: _buildExerciseSelector()),
               SliverToBoxAdapter(child: _buildVideoUpload()),
+              SliverToBoxAdapter(child: _buildExerciseSelector()),
               SliverToBoxAdapter(child: _buildAnalyzeButton()),
               if (_errorMsg != null)
                 SliverToBoxAdapter(child: _buildError()),
@@ -225,55 +300,271 @@ class _PoseAnalysisScreenState extends State<PoseAnalysisScreen> {
     );
   }
 
+  /// Exercise selector — now shows auto-detected result first, with manual
+  /// override available.
   Widget _buildExerciseSelector() {
+    final hasFile = _selectedFilePath != null || _selectedFileBytes != null;
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
       child: _section(
         title: 'Exercise',
         icon: Icons.fitness_center_rounded,
-        child: _isLoadingExercises
-            ? const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: CircularProgressIndicator(color: AppColors.primary),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Classifying spinner ──
+            if (_isClassifying)
+              _buildClassifyingIndicator(),
+
+            // ── Classification result chip ──
+            if (!_isClassifying && _classifiedExercise != null)
+              _buildClassificationResult(),
+
+            // ── Classification error ──
+            if (_classifyError != null && !_isClassifying)
+              _buildClassifyError(),
+
+            // ── Manual override dropdown ──
+            if (_showManualOverride || _classifiedExercise == null) ...[
+              if (_classifiedExercise != null || _classifyError != null)
+                const SizedBox(height: 12),
+              _buildExerciseDropdown(),
+            ],
+
+            // ── Prompt to pick video first ──
+            if (!hasFile && _classifiedExercise == null && !_isClassifying)
+              const Padding(
+                padding: EdgeInsets.only(top: 8),
+                child: Text(
+                  'Upload a video to auto-detect the exercise',
+                  style: TextStyle(color: AppColors.textDisabled, fontSize: 12),
                 ),
-              )
-            : DropdownButtonFormField<String>(
-                value: _selectedExercise,
-                dropdownColor: AppColors.cardBg,
-                style: const TextStyle(color: AppColors.textPrimary),
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: AppColors.darkBg,
-                  hintText: 'Select exercise…',
-                  hintStyle: const TextStyle(color: AppColors.textMuted),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                ),
-                items: _exercises
-                    .map((e) => DropdownMenuItem(
-                          value: e,
-                          child: Text(
-                            e.split(' ').map((w) =>
-                              '${w[0].toUpperCase()}${w.substring(1)}'
-                            ).join(' '),
-                            style: const TextStyle(fontSize: 14),
-                          ),
-                        ))
-                    .toList(),
-                onChanged: (v) => setState(() => _selectedExercise = v),
               ),
+          ],
+        ),
       ),
     );
   }
 
+  Widget _buildClassifyingIndicator() {
+    return AnimatedBuilder(
+      animation: _pulseController,
+      builder: (context, child) {
+        final opacity = 0.4 + (_pulseController.value * 0.6);
+        return Opacity(
+          opacity: opacity,
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+            ),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.primary.withOpacity(0.7),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'Detecting exercise…',
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildClassificationResult() {
+    final confidence = _classificationConfidence ?? 0.0;
+    final confidencePercent = (confidence * 100).round();
+    final isHigh = confidence >= 0.80;
+    final isMedium = confidence >= 0.50 && confidence < 0.80;
+
+    final badgeColor = isHigh
+        ? AppColors.successColor
+        : isMedium
+            ? AppColors.warningColor
+            : AppColors.errorColor;
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: badgeColor.withOpacity(0.06),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: badgeColor.withOpacity(0.25)),
+      ),
+      child: Row(
+        children: [
+          // Confidence badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: badgeColor.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              '$confidencePercent%',
+              style: TextStyle(
+                color: badgeColor,
+                fontWeight: FontWeight.w800,
+                fontSize: 13,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Exercise name
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _titleCase(_classifiedExercise!),
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  confidence >= _confidenceThreshold
+                      ? 'Auto-detected exercise'
+                      : 'Low confidence — please confirm',
+                  style: TextStyle(
+                    color: confidence >= _confidenceThreshold
+                        ? AppColors.textMuted
+                        : AppColors.warningColor,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Change button
+          GestureDetector(
+            onTap: () => setState(() => _showManualOverride = !_showManualOverride),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.darkBg,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFF2E2E3E)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _showManualOverride
+                        ? Icons.check_rounded
+                        : Icons.edit_rounded,
+                    color: AppColors.textMuted,
+                    size: 14,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    _showManualOverride ? 'Done' : 'Change',
+                    style: const TextStyle(
+                      color: AppColors.textMuted,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildClassifyError() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.warningColor.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.warningColor.withOpacity(0.2)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.info_outline_rounded,
+              color: AppColors.warningColor, size: 16),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              _classifyError!,
+              style: const TextStyle(
+                  color: AppColors.warningColor, fontSize: 12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExerciseDropdown() {
+    return _isLoadingExercises
+        ? const Center(
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: CircularProgressIndicator(color: AppColors.primary),
+            ),
+          )
+        : DropdownButtonFormField<String>(
+            value: _exercises.contains(_selectedExercise)
+                ? _selectedExercise
+                : null,
+            dropdownColor: AppColors.cardBg,
+            style: const TextStyle(color: AppColors.textPrimary),
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: AppColors.darkBg,
+              hintText: 'Select exercise…',
+              hintStyle: const TextStyle(color: AppColors.textMuted),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            ),
+            items: _exercises
+                .map((e) => DropdownMenuItem(
+                      value: e,
+                      child: Text(
+                        _titleCase(e),
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                    ))
+                .toList(),
+            onChanged: (v) => setState(() {
+              _selectedExercise = v;
+              // If manually changed, clear auto-classify visual state
+              if (v != _classifiedExercise) {
+                _showManualOverride = true;
+              }
+            }),
+          );
+  }
+
   Widget _buildVideoUpload() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
       child: _section(
         title: 'Video',
         icon: Icons.videocam_rounded,
@@ -492,11 +783,7 @@ class _PoseAnalysisScreenState extends State<PoseAnalysisScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        (r['exercise_name'] as String)
-                            .split(' ')
-                            .map((w) =>
-                                '${w[0].toUpperCase()}${w.substring(1)}')
-                            .join(' '),
+                        _titleCase(r['exercise_name'] as String),
                         style: const TextStyle(
                           color: AppColors.textMuted,
                           fontSize: 13,

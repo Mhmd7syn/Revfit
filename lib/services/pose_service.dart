@@ -24,12 +24,58 @@ class PoseService {
   static String _analyzePath(String sessionId) =>
       '/pose/analyze/$sessionId';
 
+  static String _classifyPath(String sessionId) =>
+      '/pose/classify/$sessionId';
+
   static String _historyPath(String sessionId) =>
       '/pose/history/$sessionId';
 
   static const String _exercisesPath = '/pose/exercises';
+  static const String _classifierClassesPath = '/pose/classifier/classes';
 
   // ── Public API ────────────────────────────────────────────────────────
+
+  /// Upload a short video clip for automatic exercise classification.
+  ///
+  /// Returns `{"predicted_exercise": "...", "confidence": 0.97}`.
+  /// On **mobile/desktop**, pass [videoFilePath].
+  /// On **web**, pass [videoBytes] and [videoFileName].
+  static Future<Map<String, dynamic>> classifyExercise({
+    required String sessionId,
+    String? videoFilePath,
+    Uint8List? videoBytes,
+    String? videoFileName,
+  }) async {
+    assert(
+      videoFilePath != null || (videoBytes != null && videoFileName != null),
+      'Provide either videoFilePath (mobile) or videoBytes+videoFileName (web)',
+    );
+
+    late final MultipartFile videoFile;
+    if (kIsWeb) {
+      videoFile = MultipartFile.fromBytes(
+        videoBytes!,
+        filename: videoFileName ?? 'upload.mp4',
+      );
+    } else {
+      videoFile = await MultipartFile.fromFile(
+        videoFilePath!,
+        filename: videoFilePath.split('/').last,
+      );
+    }
+
+    final formData = FormData.fromMap({
+      'video': videoFile,
+    });
+
+    final response = await _dio.post(
+      _classifyPath(sessionId),
+      data: formData,
+      options: Options(contentType: 'multipart/form-data'),
+    );
+
+    return Map<String, dynamic>.from(response.data as Map);
+  }
 
   /// Upload a video file for pose analysis.
   ///
@@ -83,9 +129,15 @@ class PoseService {
     return List<dynamic>.from(response.data as List);
   }
 
-  /// Get the list of supported exercise names.
+  /// Get the list of supported exercise names (for form evaluation).
   static Future<List<String>> getSupportedExercises() async {
     final response = await _dio.get(_exercisesPath);
+    return List<String>.from(response.data as List);
+  }
+
+  /// Get the 20-class taxonomy used by the exercise classifier.
+  static Future<List<String>> getClassifierClasses() async {
+    final response = await _dio.get(_classifierClassesPath);
     return List<String>.from(response.data as List);
   }
 
@@ -97,3 +149,4 @@ class PoseService {
     return '$_baseUrl$relativePath';
   }
 }
+

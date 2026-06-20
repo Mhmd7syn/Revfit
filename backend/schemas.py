@@ -222,3 +222,12 @@ class PoseAnalysisResponse(BaseModel):
     bad_frame_count: int
     feedback_summary: Dict[str, int]  # feedback message → occurrence count
     video_url: str             # relative URL to download correction video
+
+
+# ================================================================== #
+#  Exercise Classification (Phase 1)                                  #
+# ================================================================== #
+
+class ExerciseClassificationResponse(BaseModel):
+    predicted_exercise: str    # one of the 20 taxonomy classes
+    confidence: float          # 0.0–1.0 ensemble confidence
