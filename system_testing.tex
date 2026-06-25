@@ -1,0 +1,255 @@
+\chapter{System Testing}
+
+\vspace*{3cm} 
+\begin{center}
+    {\fontsize{50}{50}\selectfont\bfseries Chapter Six:}
+    
+    \vspace{3.5cm}
+    
+    {\fontsize{30}{30}\selectfont\bfseries System Testing}
+\end{center}
+
+\thispagestyle{plain}
+
+
+
+\vspace{1cm}
+
+\begin{flushleft}
+
+\noindent
+5.1 Required Third-Party Tools
+\dotfill \pageref{sec:tools}
+
+\vspace{0.5cm}
+
+\noindent
+5.2 Installation Guide
+\dotfill \pageref{sec:installation}
+
+\vspace{0.5cm}
+
+\noindent
+5.3 Running the Application
+\dotfill \pageref{sec:running}
+
+\vspace{0.5cm}
+
+\noindent
+5.4 User Interface Walkthrough
+\dotfill \pageref{sec:ui}
+
+\end{flushleft}
+
+\newpage
+
+
+% ----------------------------------------------------------------
+\section{Required Third-Party Tools}
+\label{sec:tools}
+% ----------------------------------------------------------------
+
+\large
+
+The following tools and libraries are required to run Revfit locally:
+
+\begin{itemize}
+    \item \textbf{Python 3.10+} with pip package manager
+    \item \textbf{Flutter SDK} for the cross-platform frontend
+    \item \textbf{CUDA-compatible GPU} (optional, for accelerated inference)
+    \item \textbf{Spoonacular API Key} (for nutritional meal data) \cite{spoonacular}
+\end{itemize}
+
+\normalsize
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Tool / Library} & \textbf{Purpose} \\
+\hline
+uvicorn       & FastAPI ASGI development server \\
+PyTorch       & Deep learning inference (VideoMAE, X3D-M, TCN) \\
+MediaPipe     & Real-time 3D pose landmark extraction \\
+OpenCV        & Video stream processing and HUD rendering \\
+FAISS         & Vector database for collaborative filtering \\
+FastAPI       & Backend web API \\
+Flutter       & Cross-platform frontend user interface \\
+Spoonacular   & External nutritional recipe API \\
+\hline
+\end{tabular}
+\caption{Required third-party dependencies}
+\label{tab:tools}
+\end{table}
+
+% ----------------------------------------------------------------
+\section{Installation Guide}
+\label{sec:installation}
+% ----------------------------------------------------------------
+
+\subsection*{Step 1: Clone Repository}
+
+\begin{codebox}
+\begin{verbatim}
+git clone https://github.com/[your-repo]/Revfit.git
+cd Revfit
+\end{verbatim}
+\end{codebox}
+
+\subsection*{Step 2: Install Backend Dependencies}
+
+\begin{codebox}
+\begin{verbatim}
+cd backend
+pip install -r requirements.txt
+\end{verbatim}
+\end{codebox}
+
+\large
+This installs: FastAPI, uvicorn, torch, torchvision, mediapipe, opencv-python, faiss-cpu, and transformers (VideoMAE, X3D-M).
+\normalsize
+
+\subsection*{Step 3: Install Frontend Dependencies}
+
+\begin{codebox}
+\begin{verbatim}
+flutter pub get
+\end{verbatim}
+\end{codebox}
+
+\subsection*{Step 4: Configure Environment Variables}
+
+Create a \texttt{.env} file in the project root:
+
+\begin{codebox}
+\begin{verbatim}
+SPOONACULAR_API_KEY=your_api_key_here
+\end{verbatim}
+\end{codebox}
+
+\subsection*{Optional: GPU Setup (NVIDIA)}
+
+\begin{codebox}
+\begin{verbatim}
+pip install torch torchvision \
+    --index-url https://download.pytorch.org/whl/cu121
+\end{verbatim}
+\end{codebox}
+
+% ----------------------------------------------------------------
+\section{Running the Application}
+\label{sec:running}
+% ----------------------------------------------------------------
+
+\subsection*{Step 1: Start the Backend Server}
+
+\begin{codebox}
+\begin{verbatim}
+cd backend
+uvicorn main:app --reload
+\end{verbatim}
+\end{codebox}
+
+\subsection*{Step 2: Start the Frontend}
+
+\begin{codebox}
+\begin{verbatim}
+flutter run
+\end{verbatim}
+\end{codebox}
+
+\subsection*{Step 3: Access the Application}
+
+\large
+The Flutter application will launch in the connected Android device or emulator.
+
+\vspace{0.4cm}
+
+Available API endpoints:
+\begin{itemize}
+    \item \url{http://127.0.0.1:8000/docs} --- Interactive Swagger UI documentation
+    \item \url{http://127.0.0.1:8000/api/recommend} --- Recommendation engine endpoint
+    \item \url{http://127.0.0.1:8000/api/analyze} --- Computer vision inference endpoint
+\end{itemize}
+\normalsize
+
+\subsection*{Troubleshooting}
+
+\begin{itemize}
+    \item \textbf{Port busy}: run with \texttt{--port 8001} flag
+    \item \textbf{CUDA error}: force CPU with \texttt{export CUDA\_VISIBLE\_DEVICES=-1}
+    \item \textbf{Camera not detected}: ensure app permissions allow camera access on the Android device
+\end{itemize}
+
+\large
+\noindent\textbf{Production deployment}: Remove \texttt{--reload}, build the frontend with \texttt{flutter build apk} to distribute to Android devices, and serve the backend via a reverse proxy (e.g., nginx).
+\normalsize
+
+% ----------------------------------------------------------------
+\section{User Interface Walkthrough}
+\label{sec:ui}
+% ----------------------------------------------------------------
+
+\subsection{Authentication and Onboarding}
+
+\large
+
+Upon launching the application, users are greeted with the Authentication screen. Following secure registration or login, the Onboarding flow collects the inputs required to construct the 30-dimensional user feature vector for the VDB. Users select their primary fitness goal, fitness level, available equipment, and dietary constraints.
+
+\normalsize
+
+% [INSERT FIGURE: Screenshot of Registration / Login Screen]
+
+
+\vspace{0.3cm}
+
+% [INSERT FIGURE: Screenshot of Onboarding Questionnaire]
+
+
+\subsection{Personalized Dashboard}
+
+\large
+
+Once onboarding is complete, the Dashboard immediately populates with a personalized daily itinerary divided into the \textbf{Workout Routine} and \textbf{Nutritional Plan} segments, generated by the VDB-based CF engine.
+
+\normalsize
+
+% [INSERT FIGURE: Screenshot of User Dashboard]
+
+
+
+\subsection{Real-Time Exercise Tracking}
+
+\large
+
+When a user initiates an exercise session, the Real-Time Tracking interface activates. The HUD displays:
+\begin{itemize}
+    \item A live repetition counter.
+    \item A form status indicator (GOOD / VIOLATION).
+    \item The current processing frame rate.
+    \item A color-coded skeletal overlay (green = correct form; red = heuristic violation with directional text warning).
+\end{itemize}
+
+\normalsize
+
+% [INSERT FIGURE: Screenshot of Real-Time Tracking — Correct Form]
+
+
+\vspace{0.3cm}
+
+% [INSERT FIGURE: Screenshot of Real-Time Tracking — Form Violation]
+
+
+\subsection{Post-Workout Analysis Report}
+
+\large
+
+Upon set completion, the system aggregates timestamped kinematic data and presents a \textbf{Post-Workout Analysis Report} detailing:
+\begin{itemize}
+    \item Total valid repetitions counted.
+    \item An itemized list of detected heuristic form violations, grouped by contiguous violation frames and presented as average angular deviations.
+\end{itemize}
+
+\normalsize
+
+% [INSERT FIGURE: Screenshot of Post-Workout Analysis Report]
