@@ -84,7 +84,7 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
                 const Text(
-                  'Ready to crush today?',
+                  'Ready to crush your workout?',
                   style: TextStyle(color: AppColors.textMuted, fontSize: 12),
                 ),
               ],

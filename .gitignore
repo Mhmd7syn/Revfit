@@ -47,4 +47,5 @@ app.*.map.json
 # Python virtual environment
 /*/.venv
 
-/recommender_sys/pose_outputs/
+# Pose outputs ~~~ ignore mp4 files
+**/pose_outputs/*.mp4
