@@ -198,23 +198,30 @@ class _SignupScreenState extends State<SignupScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
+        width: double.infinity,
+        height: double.infinity,
         decoration: const BoxDecoration(gradient: AppColors.heroGradient),
         child: SafeArea(
-          child: Column(
-            children: [
-              _buildHeader(),
-              _buildProgressBar(),
-              Expanded(
-                child: SlideTransition(
-                  position: _slideAnim,
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(28, 16, 28, 24),
-                    child: _buildCurrentStep(),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 500),
+              child: Column(
+                children: [
+                  _buildHeader(),
+                  _buildProgressBar(),
+                  Expanded(
+                    child: SlideTransition(
+                      position: _slideAnim,
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(28, 16, 28, 24),
+                        child: _buildCurrentStep(),
+                      ),
+                    ),
                   ),
-                ),
+                  _buildNavButtons(),
+                ],
               ),
-              _buildNavButtons(),
-            ],
+            ),
           ),
         ),
       ),

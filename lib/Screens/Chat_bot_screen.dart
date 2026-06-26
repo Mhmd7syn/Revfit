@@ -5,7 +5,7 @@ import 'package:gym2/services/chat_bot_service.dart';
 import 'package:gym2/models/chat_message.dart';
 import 'package:gym2/services/dio_helper.dart';
 import 'package:gym2/services/auth_service.dart';
-import 'live_camera_screen.dart';
+import 'live_pose_screen.dart';
 import 'upload_video_screen.dart';
 import 'diet_plan_screen.dart';
 import 'workout_plan_screen.dart';
@@ -131,7 +131,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
 
   void _openLiveCamera() => Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => const LiveCameraScreen()),
+        MaterialPageRoute(builder: (_) => const LivePoseScreen()),
       );
 
   void _openUploadVideo() => Navigator.push(
@@ -157,11 +157,16 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     final initial = (user?.name ?? 'A')[0].toUpperCase();
     return Scaffold(
       body: Container(
+        width: double.infinity,
+        height: double.infinity,
         decoration: const BoxDecoration(gradient: AppColors.heroGradient),
         child: SafeArea(
-          child: Column(
-            children: [
-              _buildAppBar(initial),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 600),
+              child: Column(
+                children: [
+                  _buildAppBar(initial),
               Expanded(
                 child: _messages.isEmpty
                     ? _buildEmptyState()
@@ -180,6 +185,8 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
               if (_isLoading) _buildTypingIndicator(),
               _buildInputArea(),
             ],
+          ),
+            ),
           ),
         ),
       ),

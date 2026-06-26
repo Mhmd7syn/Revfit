@@ -5,18 +5,22 @@ POST /pose/analyze/{session_id}   → upload video, run analysis, return results
 POST /pose/classify/{session_id}  → upload video, classify exercise via ensemble
 GET  /pose/history/{session_id}   → retrieve past analysis results
 GET  /pose/exercises              → list supported exercise names
+WS   /pose/live/{session_id}      → real-time pose estimation via WebSocket
 """
 
+import asyncio
+import json
 import os
 import shutil
 import tempfile
 from typing import List
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile, WebSocket, WebSocketDisconnect
 
 from schemas import PoseAnalysisResponse, ExerciseClassificationResponse
 from pose_analysis import analyze_video, list_supported_exercises, POSE_OUTPUT_DIR
 from exercise_classifier import classify_exercise, EXERCISE_CLASSES
+from live_pose import LivePoseProcessor
 import state
 
 router = APIRouter()
@@ -143,3 +147,70 @@ def history(session_id: str):
 
     return state.get_pose_results(session_id)
 
+
+@router.websocket("/live/{session_id}")
+async def live_pose(
+    websocket: WebSocket,
+    session_id: str,
+    exercise: str = Query(..., description="Exercise name for form evaluation"),
+):
+    """
+    Real-time pose estimation over WebSocket.
+
+    The client sends raw JPEG frame bytes as binary messages.
+    The server responds with a JSON text message per frame containing::
+
+        {
+            "is_good_form": true,
+            "feedback_messages": [...],
+            "rep_count": 3,
+            "form_score": 87.5,
+            "landmarks": [[x, y, vis], ...]
+        }
+
+    On disconnect, a final summary is stored in the session history.
+    """
+    # Validate session
+    user = state.get_user(session_id)
+    if not user:
+        await websocket.close(code=4004, reason=f"Session '{session_id}' not found")
+        return
+
+    # Validate exercise
+    exercise_lower = exercise.lower()
+    from exercise_config import EXERCISE_TO_CONFIG
+    if exercise_lower not in EXERCISE_TO_CONFIG:
+        await websocket.close(
+            code=4000,
+            reason=f"Unsupported exercise '{exercise}'. See GET /pose/exercises",
+        )
+        return
+
+    await websocket.accept()
+
+    # Create processor
+    processor = LivePoseProcessor(exercise_lower)
+    loop = asyncio.get_event_loop()
+
+    try:
+        while True:
+            # Receive binary JPEG data from the client
+            data = await websocket.receive_bytes()
+
+            # Run CPU-heavy inference off the event loop
+            result = await loop.run_in_executor(
+                None, processor.process_frame, data
+            )
+
+            # Send JSON response
+            await websocket.send_text(json.dumps(result))
+
+    except WebSocketDisconnect:
+        pass
+    except Exception:
+        pass
+    finally:
+        # Build and store session summary
+        summary = processor.get_summary()
+        state.store_pose_result(session_id, summary)
+        processor.close()

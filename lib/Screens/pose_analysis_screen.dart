@@ -242,9 +242,14 @@ class _PoseAnalysisScreenState extends State<PoseAnalysisScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
+        width: double.infinity,
+        height: double.infinity,
         decoration: const BoxDecoration(gradient: AppColors.heroGradient),
         child: SafeArea(
-          child: CustomScrollView(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 600),
+              child: CustomScrollView(
             physics: const BouncingScrollPhysics(),
             slivers: [
               SliverToBoxAdapter(child: _buildAppBar()),
@@ -259,6 +264,8 @@ class _PoseAnalysisScreenState extends State<PoseAnalysisScreen>
                 SliverToBoxAdapter(child: _buildCorrectionVideoSection()),
               const SliverToBoxAdapter(child: SizedBox(height: 40)),
             ],
+          ),
+            ),
           ),
         ),
       ),

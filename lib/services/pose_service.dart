@@ -2,6 +2,7 @@
 import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:web_socket_channel/web_socket_channel.dart';
 import 'dio_helper.dart';
 
 /// Service for interacting with the Pose Analysis endpoints.
@@ -11,6 +12,9 @@ import 'dio_helper.dart';
 class PoseService {
   // ── Backend base URL (same as RecommendationService) ──────────────────
   static const String _baseUrl = 'http://127.0.0.1:8000'; // Change in production
+
+  // ── WebSocket base URL ────────────────────────────────────────────────
+  static const String _wsBaseUrl = 'ws://127.0.0.1:8000'; // Change in production
 
   // ── Dio instance for the local backend ────────────────────────────────
   static final Dio _dio = Dio(BaseOptions(
@@ -30,10 +34,30 @@ class PoseService {
   static String _historyPath(String sessionId) =>
       '/pose/history/$sessionId';
 
+  static String _livePath(String sessionId, String exercise) =>
+      '/pose/live/$sessionId?exercise=${Uri.encodeComponent(exercise)}';
+
   static const String _exercisesPath = '/pose/exercises';
   static const String _classifierClassesPath = '/pose/classifier/classes';
 
   // ── Public API ────────────────────────────────────────────────────────
+
+  /// Connect to the live pose estimation WebSocket.
+  ///
+  /// Returns a [WebSocketChannel] that:
+  /// - **accepts** binary JPEG frames via `channel.sink.add(Uint8List)`
+  /// - **emits** JSON text messages via `channel.stream` with per-frame
+  ///   results: `{is_good_form, feedback_messages, rep_count, form_score, landmarks}`.
+  ///
+  /// Close the channel when the session ends to trigger the server-side
+  /// summary storage.
+  static WebSocketChannel connectLive({
+    required String sessionId,
+    required String exerciseName,
+  }) {
+    final uri = Uri.parse('$_wsBaseUrl${_livePath(sessionId, exerciseName)}');
+    return WebSocketChannel.connect(uri);
+  }
 
   /// Upload a short video clip for automatic exercise classification.
   ///
@@ -149,4 +173,3 @@ class PoseService {
     return '$_baseUrl$relativePath';
   }
 }
-

@@ -245,17 +245,24 @@ class _DietPlanScreenState extends State<DietPlanScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
+        width: double.infinity,
+        height: double.infinity,
         decoration: const BoxDecoration(gradient: AppColors.heroGradient),
         child: SafeArea(
-          child: Column(
-            children: [
-              _buildAppBar(),
-              Expanded(
-                child: _generatedPlan != null
-                    ? _buildResultView()
-                    : _buildFormView(),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 600),
+              child: Column(
+                children: [
+                  _buildAppBar(),
+                  Expanded(
+                    child: _generatedPlan != null
+                        ? _buildResultView()
+                        : _buildFormView(),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),

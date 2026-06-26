@@ -6,6 +6,7 @@ import 'Chat_bot_screen.dart';
 import 'workout_plan_screen.dart';
 import 'diet_plan_screen.dart';
 import 'pose_analysis_screen.dart';
+import 'live_pose_screen.dart';
 import 'login_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -24,20 +25,27 @@ class HomeScreen extends StatelessWidget {
 
     return Scaffold(
       body: Container(
+        width: double.infinity,
+        height: double.infinity,
         decoration: const BoxDecoration(gradient: AppColors.heroGradient),
         child: SafeArea(
-          child: CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              SliverToBoxAdapter(child: _buildTopBar(context, firstName)),
-              SliverToBoxAdapter(child: _buildGreetingHero(context, firstName, goalType, bmi)),
-              SliverToBoxAdapter(child: _buildSectionLabel('Quick Actions')),
-              SliverToBoxAdapter(child: _buildActionCards(context)),
-              SliverToBoxAdapter(child: _buildSectionLabel('Your Stats')),
-              SliverToBoxAdapter(child: _buildStatsRow(user)),
-              SliverToBoxAdapter(child: _buildTip()),
-              const SliverToBoxAdapter(child: SizedBox(height: 32)),
-            ],
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 600),
+              child: CustomScrollView(
+                physics: const BouncingScrollPhysics(),
+                slivers: [
+                  SliverToBoxAdapter(child: _buildTopBar(context, firstName)),
+                  SliverToBoxAdapter(child: _buildGreetingHero(context, firstName, goalType, bmi)),
+                  SliverToBoxAdapter(child: _buildSectionLabel('Quick Actions')),
+                  SliverToBoxAdapter(child: _buildActionCards(context)),
+                  SliverToBoxAdapter(child: _buildSectionLabel('Your Stats')),
+                  SliverToBoxAdapter(child: _buildStatsRow(user)),
+                  SliverToBoxAdapter(child: _buildTip()),
+                  const SliverToBoxAdapter(child: SizedBox(height: 32)),
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -274,6 +282,19 @@ class HomeScreen extends StatelessWidget {
         onTap: () => Navigator.push(
           context,
           _route(const PoseAnalysisScreen()),
+        ),
+      ),
+      _ActionCard(
+        icon: Icons.videocam_rounded,
+        label: 'Live Form Check',
+        sublabel: 'Real-time camera feedback',
+        gradient: const LinearGradient(
+          colors: [Color(0xFF1A102A), Color(0xFF0D0520)],
+        ),
+        accentColor: const Color(0xFFE040FB),
+        onTap: () => Navigator.push(
+          context,
+          _route(const LivePoseScreen()),
         ),
       ),
       _ActionCard(

@@ -231,3 +231,23 @@ class PoseAnalysisResponse(BaseModel):
 class ExerciseClassificationResponse(BaseModel):
     predicted_exercise: str    # one of the 20 taxonomy classes
     confidence: float          # 0.0–1.0 ensemble confidence
+
+
+# ================================================================== #
+#  Live Pose Estimation (WebSocket)                                   #
+# ================================================================== #
+
+class LivePoseFrameResponse(BaseModel):
+    is_good_form: bool
+    feedback_messages: List[str]
+    rep_count: int
+    form_score: float                     # running score 0–100
+    landmarks: List[List[float]]          # [[x, y, visibility], …] 33 landmarks
+
+
+class LivePoseSessionSummary(BaseModel):
+    exercise_name: str
+    total_frames: int
+    rep_count: int
+    form_score: float                     # final score 0–100
+    feedback_summary: Dict[str, int]      # feedback message → occurrence count
