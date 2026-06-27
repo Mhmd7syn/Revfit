@@ -33,7 +33,7 @@ class RecommendationService {
   //  API Endpoint Constants                                            //
   // ------------------------------------------------------------------ //
 
-  static const String _baseUrl = 'http://127.0.0.1:8000'; // Change in production
+  static const String _baseUrl = 'http://192.168.1.27:8000'; // Change in production
 
   // Users
   static const String _createUser = '$_baseUrl/users/';

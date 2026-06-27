@@ -11,10 +11,10 @@ import 'dio_helper.dart';
 /// ngrok-hosted [DioHelper.baseUrl].
 class PoseService {
   // ── Backend base URL (same as RecommendationService) ──────────────────
-  static const String _baseUrl = 'http://127.0.0.1:8000'; // Change in production
+  static const String _baseUrl = 'http://192.168.1.27:8000'; // Change in production
 
   // ── WebSocket base URL ────────────────────────────────────────────────
-  static const String _wsBaseUrl = 'ws://127.0.0.1:8000'; // Change in production
+  static const String _wsBaseUrl = 'ws://192.168.1.27:8000'; // Change in production
 
   // ── Dio instance for the local backend ────────────────────────────────
   static final Dio _dio = Dio(BaseOptions(

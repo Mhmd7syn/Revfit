@@ -2,9 +2,9 @@
 main.py — FastAPI entry point for the RevFit recommender system.
 
 Run with:
-    uvicorn main:app --reload
+    uvicorn main:app --host 0.0.0.0 --reload
 
-Swagger UI: http://127.0.0.1:8000/docs
+Swagger UI: http://192.168.1.27:8000/docs
 """
 
 from fastapi import FastAPI
