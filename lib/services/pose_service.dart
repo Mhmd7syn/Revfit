@@ -19,9 +19,9 @@ class PoseService {
   // ── Dio instance for the local backend ────────────────────────────────
   static final Dio _dio = Dio(BaseOptions(
     baseUrl: _baseUrl,
-    connectTimeout: const Duration(seconds: 30),
-    sendTimeout: const Duration(seconds: 120),
-    receiveTimeout: const Duration(seconds: 120),
+    connectTimeout: const Duration(seconds: 300),
+    sendTimeout: const Duration(seconds: 300),
+    receiveTimeout: const Duration(seconds: 300),
   ));
 
   // ── Endpoint paths ────────────────────────────────────────────────────
