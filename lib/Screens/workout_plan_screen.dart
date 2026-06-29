@@ -5,6 +5,7 @@ import 'package:gym2/services/auth_service.dart';
 import 'package:gym2/services/recommendation_service.dart';
 import 'package:gym2/models/workout_plan_model.dart';
 import 'package:gym2/models/user_model.dart';
+import 'package:gym2/services/location_service.dart';
 
 class WorkoutPlanScreen extends StatefulWidget {
   const WorkoutPlanScreen({super.key});
@@ -27,7 +28,11 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen>
   int? _daysPerWeek;
   String? _workoutDuration;
   String? _cardioStrengthBias;
-  final _locationController = TextEditingController();
+
+  String? _detectedCountry;
+  String? _manualCountry;
+  bool _isLocating = false;
+  bool _useManualLocation = false;
 
   bool _isGenerating = false;
   WorkoutPlanModel? _generatedPlan;
@@ -69,11 +74,21 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen>
       vsync: this,
       duration: const Duration(milliseconds: 500),
     );
+    _detectLocation();
+  }
+
+  Future<void> _detectLocation() async {
+    setState(() => _isLocating = true);
+    final country = await LocationService.detectCountry();
+    setState(() {
+      _detectedCountry = country;
+      _isLocating = false;
+      if (country == null) _useManualLocation = true;
+    });
   }
 
   @override
   void dispose() {
-    _locationController.dispose();
     _resultCtrl.dispose();
     super.dispose();
   }
@@ -157,7 +172,7 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen>
         'diet_type': 'omnivore',
         'allergies': [],
         'intolerances': [],
-        'country': _locationController.text.trim(),
+        'country': _useManualLocation ? _manualCountry : _detectedCountry,
         'preferred_workout_duration': _workoutDuration ?? 'medium',
         'cardio_strength_bias': _cardioStrengthBias ?? 'balanced',
         'meals_per_day': 3,
@@ -331,19 +346,7 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen>
                       v == null ? 'Select workout location' : null,
                 ),
                 const SizedBox(height: 12),
-                TextFormField(
-                  controller: _locationController,
-                  style: const TextStyle(
-                      color: AppColors.textPrimary, fontSize: 14),
-                  decoration: const InputDecoration(
-                    labelText: 'Country / Region',
-                    hintText: 'e.g. Egypt',
-                    prefixIcon: Icon(Icons.public_rounded, size: 20),
-                  ),
-                  validator: (v) => v == null || v.trim().isEmpty
-                      ? 'Enter your country'
-                      : null,
-                ),
+                _buildLocationContent(),
               ],
             ),
           ),
@@ -611,6 +614,117 @@ class _WorkoutPlanScreenState extends State<WorkoutPlanScreen>
           .toList(),
       onChanged: onChanged,
       validator: validator,
+    );
+  }
+
+  Widget _buildLocationContent() {
+    if (_isLocating) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation(AppColors.primary),
+                ),
+              ),
+              SizedBox(width: 10),
+              Text(
+                'Detecting your location…',
+                style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (!_useManualLocation && _detectedCountry != null) {
+      return Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                  color: AppColors.primary.withOpacity(0.25)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.gps_fixed_rounded,
+                    color: AppColors.primary, size: 18),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _detectedCountry!,
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () =>
+                      setState(() => _useManualLocation = true),
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: AppColors.cardBg,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.edit_rounded,
+                        size: 16, color: AppColors.textMuted),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Column(
+      children: [
+        TextFormField(
+          style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
+          decoration: const InputDecoration(
+            labelText: 'Country / Region',
+            hintText: 'e.g. Egypt, Italy, USA',
+            prefixIcon: Icon(Icons.public_rounded, size: 20),
+          ),
+          onChanged: (v) => setState(() => _manualCountry = v),
+          validator: (v) {
+            if (_useManualLocation && (v == null || v.isEmpty)) {
+              return 'Please enter your country';
+            }
+            return null;
+          },
+        ),
+        TextButton.icon(
+          onPressed: () {
+            setState(() {
+              _useManualLocation = false;
+              _manualCountry = null;
+              _detectLocation();
+            });
+          },
+          icon: const Icon(Icons.gps_not_fixed_rounded, size: 16),
+          label: const Text('Retry GPS detection'),
+          style: TextButton.styleFrom(foregroundColor: AppColors.primary),
+        ),
+      ],
     );
   }
 

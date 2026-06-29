@@ -1,13 +1,17 @@
 // lib/Screens/pose_analysis_screen.dart
+import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:video_player/video_player.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:gym2/colors/colors.dart';
 import 'package:gym2/services/auth_service.dart';
 import 'package:gym2/services/pose_service.dart';
 import 'package:gym2/services/recommendation_service.dart';
+import 'package:gym2/services/tts_service.dart';
 
 class PoseAnalysisScreen extends StatefulWidget {
   const PoseAnalysisScreen({super.key});
@@ -15,6 +19,9 @@ class PoseAnalysisScreen extends StatefulWidget {
   @override
   State<PoseAnalysisScreen> createState() => _PoseAnalysisScreenState();
 }
+
+/// Visual phases of the screen.
+enum _ScreenPhase { upload, streaming, result }
 
 class _PoseAnalysisScreenState extends State<PoseAnalysisScreen>
     with SingleTickerProviderStateMixin {
@@ -47,6 +54,19 @@ class _PoseAnalysisScreenState extends State<PoseAnalysisScreen>
 
   late AnimationController _pulseController;
 
+  // ── Streaming state ───────────────────────────────────────────────────
+  _ScreenPhase _phase = _ScreenPhase.upload;
+  WebSocketChannel? _wsChannel;
+  StreamSubscription? _wsSub;
+  Uint8List? _currentFrame;       // Latest annotated JPEG from server
+  int _streamIndex = 0;           // Current frame index
+  int _streamTotal = 1;           // Total frames to process
+  bool _streamIsGoodForm = true;
+  List<String> _streamFeedback = [];
+  int _streamRepCount = 0;
+  double _streamFormScore = 100.0;
+  bool _isUploading = false;
+
   // ── lifecycle ─────────────────────────────────────────────────────────
   @override
   void initState() {
@@ -62,6 +82,9 @@ class _PoseAnalysisScreenState extends State<PoseAnalysisScreen>
   void dispose() {
     _pulseController.dispose();
     _videoController?.dispose();
+    _wsSub?.cancel();
+    _wsChannel?.sink.close();
+    TtsService.instance.stop();
     super.dispose();
   }
 
@@ -178,39 +201,163 @@ class _PoseAnalysisScreenState extends State<PoseAnalysisScreen>
     _sessionId = await _recommendationService.createSession(payload);
   }
 
-  Future<void> _runAnalysis() async {
+  // ── Streaming analysis flow ───────────────────────────────────────────
+
+  Future<void> _runStreamingAnalysis() async {
     final hasFile = _selectedFilePath != null || _selectedFileBytes != null;
     if (_selectedExercise == null || !hasFile) return;
+
     setState(() {
       _isAnalyzing = true;
+      _isUploading = true;
       _errorMsg = null;
       _result = null;
+      _currentFrame = null;
+      _streamIndex = 0;
+      _streamTotal = 1;
+      _streamIsGoodForm = true;
+      _streamFeedback = [];
+      _streamRepCount = 0;
+      _streamFormScore = 100.0;
     });
 
     try {
       await _ensureSession();
-      final res = await PoseService.analyzeVideo(
+
+      // Step 1: Upload video
+      final videoId = await PoseService.uploadVideo(
         sessionId: _sessionId!,
-        exerciseName: _selectedExercise!,
         videoFilePath: _selectedFilePath,
         videoBytes: _selectedFileBytes,
         videoFileName: _selectedFileName,
       );
-      if (mounted) {
-        setState(() {
-          _result = res;
-          _isAnalyzing = false;
-        });
-        _initCorrectionVideo(res['video_url'] as String);
-      }
+
+      if (!mounted) return;
+      setState(() {
+        _isUploading = false;
+        _phase = _ScreenPhase.streaming;
+      });
+
+      // Step 2: Connect WebSocket
+      _wsChannel = PoseService.connectStreamAnalyze(
+        sessionId: _sessionId!,
+        exerciseName: _selectedExercise!,
+        videoId: videoId,
+      );
+
+      // Initialize TTS
+      TtsService.instance.resetCooldowns();
+      await TtsService.instance.init();
+
+      // Step 3: Listen to the stream
+      _wsSub = _wsChannel!.stream.listen(
+        (message) {
+          if (!mounted) return;
+
+          if (message is String) {
+            // JSON text message
+            _handleTextMessage(message);
+          } else if (message is List<int>) {
+            // Binary JPEG frame
+            setState(() {
+              _currentFrame = Uint8List.fromList(message);
+            });
+          }
+        },
+        onError: (e) {
+          if (mounted) {
+            setState(() {
+              _errorMsg = 'Connection lost: $e';
+              _isAnalyzing = false;
+              _phase = _ScreenPhase.upload;
+            });
+          }
+        },
+        onDone: () {
+          if (mounted && _phase == _ScreenPhase.streaming && _result == null) {
+            // Unexpected close without completion
+            setState(() {
+              _isAnalyzing = false;
+              _phase = _ScreenPhase.upload;
+              _errorMsg = 'Connection closed unexpectedly.';
+            });
+          }
+        },
+      );
     } catch (e) {
       if (mounted) {
         setState(() {
           _isAnalyzing = false;
+          _isUploading = false;
+          _phase = _ScreenPhase.upload;
           _errorMsg = e.toString();
         });
       }
     }
+  }
+
+  void _handleTextMessage(String raw) {
+    try {
+      final data = json.decode(raw) as Map<String, dynamic>;
+      final type = data['type'] as String? ?? '';
+
+      switch (type) {
+        case 'frame':
+          setState(() {
+            _streamIndex = data['index'] as int? ?? _streamIndex;
+            _streamTotal = data['total'] as int? ?? _streamTotal;
+            _streamIsGoodForm = data['is_good_form'] as bool? ?? true;
+            _streamFeedback = List<String>.from(data['feedback'] as List? ?? []);
+            _streamRepCount = data['rep_count'] as int? ?? _streamRepCount;
+            _streamFormScore =
+                (data['form_score'] as num?)?.toDouble() ?? _streamFormScore;
+          });
+
+        case 'form_correction':
+          final msg = data['message'] as String? ?? '';
+          if (msg.isNotEmpty) {
+            TtsService.instance.speak(msg);
+          }
+
+        case 'complete':
+          final result = data['result'] as Map<String, dynamic>? ?? {};
+          _wsSub?.cancel();
+          _wsChannel?.sink.close();
+
+          if (mounted) {
+            setState(() {
+              _result = result;
+              _isAnalyzing = false;
+              _phase = _ScreenPhase.result;
+            });
+
+            TtsService.instance.stop();
+
+            final videoUrl = result['video_url'] as String?;
+            if (videoUrl != null) {
+              _initCorrectionVideo(videoUrl);
+            }
+          }
+
+        case 'error':
+          setState(() {
+            _errorMsg = data['message'] as String? ?? 'Unknown error';
+            _isAnalyzing = false;
+            _phase = _ScreenPhase.upload;
+          });
+      }
+    } catch (_) {}
+  }
+
+  void _cancelStreaming() {
+    _wsSub?.cancel();
+    _wsChannel?.sink.close();
+    TtsService.instance.stop();
+    setState(() {
+      _isAnalyzing = false;
+      _phase = _ScreenPhase.upload;
+      _currentFrame = null;
+    });
   }
 
   Future<void> _initCorrectionVideo(String relativeUrl) async {
@@ -234,6 +381,17 @@ class _PoseAnalysisScreenState extends State<PoseAnalysisScreen>
     }
   }
 
+  void _resetToUpload() {
+    _videoController?.dispose();
+    _videoController = null;
+    setState(() {
+      _result = null;
+      _errorMsg = null;
+      _currentFrame = null;
+      _phase = _ScreenPhase.upload;
+    });
+  }
+
   String _titleCase(String s) =>
       s.split(' ').map((w) => '${w[0].toUpperCase()}${w.substring(1)}').join(' ');
 
@@ -249,23 +407,364 @@ class _PoseAnalysisScreenState extends State<PoseAnalysisScreen>
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 600),
-              child: CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              SliverToBoxAdapter(child: _buildAppBar()),
-              SliverToBoxAdapter(child: _buildVideoUpload()),
-              SliverToBoxAdapter(child: _buildExerciseSelector()),
-              SliverToBoxAdapter(child: _buildAnalyzeButton()),
-              if (_errorMsg != null)
-                SliverToBoxAdapter(child: _buildError()),
-              if (_result != null)
-                SliverToBoxAdapter(child: _buildResultCard()),
-              if (_result != null && _result!['video_url'] != null)
-                SliverToBoxAdapter(child: _buildCorrectionVideoSection()),
-              const SliverToBoxAdapter(child: SizedBox(height: 40)),
+              child: switch (_phase) {
+                _ScreenPhase.upload => _buildUploadPhase(),
+                _ScreenPhase.streaming => _buildStreamingPhase(),
+                _ScreenPhase.result => _buildResultPhase(),
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // =====================================================================
+  // PHASE 1: Upload
+  // =====================================================================
+  Widget _buildUploadPhase() {
+    return CustomScrollView(
+      physics: const BouncingScrollPhysics(),
+      slivers: [
+        SliverToBoxAdapter(child: _buildAppBar()),
+        SliverToBoxAdapter(child: _buildVideoUpload()),
+        SliverToBoxAdapter(child: _buildExerciseSelector()),
+        SliverToBoxAdapter(child: _buildAnalyzeButton()),
+        if (_errorMsg != null) SliverToBoxAdapter(child: _buildError()),
+        const SliverToBoxAdapter(child: SizedBox(height: 40)),
+      ],
+    );
+  }
+
+  // =====================================================================
+  // PHASE 2: Streaming — live frame player with HUD
+  // =====================================================================
+  Widget _buildStreamingPhase() {
+    final progress = _streamTotal > 0 ? _streamIndex / _streamTotal : 0.0;
+    final scoreColor = _streamFormScore >= 80
+        ? AppColors.successColor
+        : _streamFormScore >= 50
+            ? AppColors.warningColor
+            : AppColors.errorColor;
+
+    return Column(
+      children: [
+        // Top bar with back/cancel
+        Padding(
+          padding: const EdgeInsets.fromLTRB(8, 8, 16, 0),
+          child: Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.close_rounded,
+                    color: AppColors.textPrimary, size: 22),
+                onPressed: _cancelStreaming,
+              ),
+              const Expanded(
+                child: Text(
+                  'Analyzing…',
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              // Uploading indicator
+              if (_isUploading)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: AppColors.primary),
+                      ),
+                      SizedBox(width: 8),
+                      Text('Uploading…',
+                          style: TextStyle(
+                              color: AppColors.primary, fontSize: 12)),
+                    ],
+                  ),
+                ),
             ],
           ),
+        ),
+
+        const SizedBox(height: 8),
+
+        // HUD stats row
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              _streamHudChip(
+                icon: Icons.replay_rounded,
+                label: '$_streamRepCount reps',
+                color: AppColors.primary,
+              ),
+              const SizedBox(width: 8),
+              _streamHudChip(
+                icon: Icons.speed_rounded,
+                label: '${_streamFormScore.round()}%',
+                color: scoreColor,
+              ),
+              const SizedBox(width: 8),
+              _streamHudChip(
+                icon: _streamIsGoodForm
+                    ? Icons.check_circle_outline_rounded
+                    : Icons.warning_amber_rounded,
+                label: _streamIsGoodForm ? 'Good Form' : 'Fix Form',
+                color: _streamIsGoodForm
+                    ? AppColors.successColor
+                    : AppColors.errorColor,
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        // Live frame display
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: AppColors.darkBg,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: _streamIsGoodForm
+                        ? AppColors.successColor.withOpacity(0.3)
+                        : AppColors.errorColor.withOpacity(0.3),
+                    width: 2,
+                  ),
+                ),
+                child: _currentFrame != null
+                    ? Image.memory(
+                        _currentFrame!,
+                        fit: BoxFit.contain,
+                        gaplessPlayback: true, // Prevents flicker
+                      )
+                    : const Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            CircularProgressIndicator(
+                                color: AppColors.primary),
+                            SizedBox(height: 16),
+                            Text(
+                              'Processing first frame…',
+                              style: TextStyle(
+                                  color: AppColors.textMuted, fontSize: 13),
+                            ),
+                          ],
+                        ),
+                      ),
+              ),
             ),
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        // Progress bar
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Frame $_streamIndex / $_streamTotal',
+                    style: const TextStyle(
+                        color: AppColors.textMuted, fontSize: 12),
+                  ),
+                  Text(
+                    '${(progress * 100).round()}%',
+                    style: const TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(6),
+                child: LinearProgressIndicator(
+                  value: progress.clamp(0.0, 1.0),
+                  minHeight: 6,
+                  backgroundColor: AppColors.darkBg,
+                  valueColor:
+                      AlwaysStoppedAnimation<Color>(AppColors.primary),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 8),
+
+        // Feedback messages (scrollable)
+        if (_streamFeedback.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.errorColor.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                    color: AppColors.errorColor.withOpacity(0.2)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: _streamFeedback
+                    .take(3)
+                    .map((msg) => Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.volume_up_rounded,
+                                  color: AppColors.errorColor, size: 14),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  msg,
+                                  style: const TextStyle(
+                                      color: AppColors.errorColor,
+                                      fontSize: 12),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ))
+                    .toList(),
+              ),
+            ),
+          ),
+
+        const SizedBox(height: 8),
+      ],
+    );
+  }
+
+  Widget _streamHudChip({
+    required IconData icon,
+    required String label,
+    required Color color,
+  }) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: color.withOpacity(0.25)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: color, size: 16),
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // =====================================================================
+  // PHASE 3: Result (score card + correction video)
+  // =====================================================================
+  Widget _buildResultPhase() {
+    return CustomScrollView(
+      physics: const BouncingScrollPhysics(),
+      slivers: [
+        SliverToBoxAdapter(child: _buildResultAppBar()),
+        SliverToBoxAdapter(child: _buildResultCard()),
+        if (_result != null && _result!['video_url'] != null)
+          SliverToBoxAdapter(child: _buildCorrectionVideoSection()),
+        SliverToBoxAdapter(child: _buildNewAnalysisButton()),
+        const SliverToBoxAdapter(child: SizedBox(height: 40)),
+      ],
+    );
+  }
+
+  Widget _buildResultAppBar() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 8, 24, 0),
+      child: Row(
+        children: [
+          IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                color: AppColors.textPrimary, size: 20),
+            onPressed: _resetToUpload,
+          ),
+          const Expanded(
+            child: Text(
+              'Analysis Complete',
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.successColor.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Icon(Icons.check_circle_rounded,
+                color: AppColors.successColor, size: 22),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNewAnalysisButton() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+      child: SizedBox(
+        width: double.infinity,
+        height: 52,
+        child: OutlinedButton.icon(
+          onPressed: _resetToUpload,
+          icon: const Icon(Icons.replay_rounded, size: 18),
+          label: const Text('Analyze Another Video'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.primary,
+            side: BorderSide(color: AppColors.primary.withOpacity(0.4)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           ),
         ),
       ),
@@ -654,7 +1153,7 @@ class _PoseAnalysisScreenState extends State<PoseAnalysisScreen>
                 : null,
           ),
           child: MaterialButton(
-            onPressed: ready && !_isAnalyzing ? _runAnalysis : null,
+            onPressed: ready && !_isAnalyzing ? _runStreamingAnalysis : null,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             child: _isAnalyzing
@@ -664,14 +1163,22 @@ class _PoseAnalysisScreenState extends State<PoseAnalysisScreen>
                     child: CircularProgressIndicator(
                         strokeWidth: 2.5, color: Colors.white),
                   )
-                : const Text(
-                    'Analyze Form',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16,
-                      letterSpacing: 0.5,
-                    ),
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.stream_rounded,
+                          color: Colors.white, size: 20),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Stream Analysis',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
                   ),
           ),
         ),

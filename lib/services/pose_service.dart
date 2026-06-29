@@ -31,11 +31,23 @@ class PoseService {
   static String _classifyPath(String sessionId) =>
       '/pose/classify/$sessionId';
 
+  static String _uploadPath(String sessionId) =>
+      '/pose/upload/$sessionId';
+
   static String _historyPath(String sessionId) =>
       '/pose/history/$sessionId';
 
   static String _livePath(String sessionId, String exercise) =>
       '/pose/live/$sessionId?exercise=${Uri.encodeComponent(exercise)}';
+
+  static String _streamAnalyzePath(
+    String sessionId,
+    String exerciseName,
+    String videoId,
+  ) =>
+      '/pose/stream-analyze/$sessionId'
+      '?exercise_name=${Uri.encodeComponent(exerciseName)}'
+      '&video_id=${Uri.encodeComponent(videoId)}';
 
   static const String _exercisesPath = '/pose/exercises';
   static const String _classifierClassesPath = '/pose/classifier/classes';
@@ -56,6 +68,68 @@ class PoseService {
     required String exerciseName,
   }) {
     final uri = Uri.parse('$_wsBaseUrl${_livePath(sessionId, exerciseName)}');
+    return WebSocketChannel.connect(uri);
+  }
+
+  /// Upload a video file for subsequent streaming analysis.
+  ///
+  /// Returns the `video_id` string used to initiate a streaming session.
+  /// On **mobile/desktop**, pass [videoFilePath].
+  /// On **web**, pass [videoBytes] and [videoFileName].
+  static Future<String> uploadVideo({
+    required String sessionId,
+    String? videoFilePath,
+    Uint8List? videoBytes,
+    String? videoFileName,
+  }) async {
+    assert(
+      videoFilePath != null || (videoBytes != null && videoFileName != null),
+      'Provide either videoFilePath (mobile) or videoBytes+videoFileName (web)',
+    );
+
+    late final MultipartFile videoFile;
+    if (kIsWeb) {
+      videoFile = MultipartFile.fromBytes(
+        videoBytes!,
+        filename: videoFileName ?? 'upload.mp4',
+      );
+    } else {
+      videoFile = await MultipartFile.fromFile(
+        videoFilePath!,
+        filename: videoFilePath.split('/').last,
+      );
+    }
+
+    final formData = FormData.fromMap({'video': videoFile});
+
+    final response = await _dio.post(
+      _uploadPath(sessionId),
+      data: formData,
+      options: Options(contentType: 'multipart/form-data'),
+    );
+
+    final data = Map<String, dynamic>.from(response.data as Map);
+    return data['video_id'] as String;
+  }
+
+  /// Connect to the streaming pose analysis WebSocket.
+  ///
+  /// Returns a [WebSocketChannel] whose stream emits:
+  /// - **Text** messages (JSON) with `type` field:
+  ///   - `frame` — per-frame metadata (index, total, form score, feedback)
+  ///   - `form_correction` — voice-feedback alert
+  ///   - `complete` — final report
+  /// - **Binary** messages: JPEG-encoded annotated frames
+  ///
+  /// The client does **not** send any messages after connecting.
+  static WebSocketChannel connectStreamAnalyze({
+    required String sessionId,
+    required String exerciseName,
+    required String videoId,
+  }) {
+    final uri = Uri.parse(
+      '$_wsBaseUrl${_streamAnalyzePath(sessionId, exerciseName, videoId)}',
+    );
     return WebSocketChannel.connect(uri);
   }
 

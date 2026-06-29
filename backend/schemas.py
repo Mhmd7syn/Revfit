@@ -234,6 +234,14 @@ class ExerciseClassificationResponse(BaseModel):
 
 
 # ================================================================== #
+#  Video Upload (for WebSocket streaming)                             #
+# ================================================================== #
+
+class VideoUploadResponse(BaseModel):
+    video_id: str              # UUID referencing the uploaded temp file
+
+
+# ================================================================== #
 #  Live Pose Estimation (WebSocket)                                   #
 # ================================================================== #
 
