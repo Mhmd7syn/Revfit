@@ -1,68 +1,88 @@
-// ignore: avoid_web_libraries_in_flutter
+// ignore_for_file: avoid_web_libraries_in_flutter
 import 'dart:js_interop';
 
-// ── Web Speech API bindings ──────────────────────────────────────────────────
+// ── Web Audio API Interop ───────────────────────────────────────────────────
 
-@JS('SpeechSynthesisUtterance')
+@JS('AudioContext')
 @staticInterop
-class _SpeechSynthesisUtterance {
-  external factory _SpeechSynthesisUtterance(JSString text);
+class _AudioContext {
+  external factory _AudioContext();
 }
 
-extension _SpeechSynthesisUtteranceExtension on _SpeechSynthesisUtterance {
-  external set lang(JSString value);
-  external set rate(JSNumber value);
-  external set pitch(JSNumber value);
-  external set volume(JSNumber value);
+extension _AudioContextExtension on _AudioContext {
+  external _OscillatorNode createOscillator();
+  external _GainNode createGain();
+  external _AudioNode get destination;
+  external JSNumber get currentTime;
 }
-
-@JS('speechSynthesis')
-external _SpeechSynthesis get _speechSynthesis;
 
 @JS()
 @staticInterop
-class _SpeechSynthesis {}
+class _AudioNode {}
 
-extension _SpeechSynthesisExt on _SpeechSynthesis {
-  external void speak(_SpeechSynthesisUtterance utterance);
-  external void cancel();
+extension _AudioNodeExtension on _AudioNode {
+  external void connect(_AudioNode destination);
+}
+
+@JS()
+@staticInterop
+class _OscillatorNode extends _AudioNode {}
+
+extension _OscillatorNodeExtension on _OscillatorNode {
+  external set type(JSString value);
+  external _AudioParam get frequency;
+  external void start([JSNumber? when]);
+  external void stop([JSNumber? when]);
+}
+
+@JS()
+@staticInterop
+class _GainNode extends _AudioNode {}
+
+extension _GainNodeExtension on _GainNode {
+  external _AudioParam get gain;
+}
+
+@JS()
+@staticInterop
+class _AudioParam {}
+
+extension _AudioParamExtension on _AudioParam {
+  external set value(JSNumber val);
+  external void exponentialRampToValueAtTime(JSNumber value, JSNumber endTime);
 }
 
 // ── Public API ───────────────────────────────────────────────────────────────
 
-/// Speaks [message] using the browser's built-in Web Speech API.
-///
-/// - Does NOT require a prior user gesture (unlike AudioContext).
-/// - Cancels any currently-playing speech before starting.
-/// - Falls back silently if the API is unavailable.
-void playSpeech(String message) {
-  if (message.isEmpty) return;
-  try {
-    _speechSynthesis.cancel();
-    final utt = _SpeechSynthesisUtterance(message.toJS);
-    utt.lang = 'en-US'.toJS;
-    utt.rate = 0.9.toJS;
-    utt.pitch = 1.0.toJS;
-    utt.volume = 1.0.toJS;
-    _speechSynthesis.speak(utt);
-  } catch (_) {
-    // Web Speech API unavailable — fail silently
-  }
-}
-
-/// Cancels any in-progress speech synthesis.
-void cancelSpeech() {
-  try {
-    _speechSynthesis.cancel();
-  } catch (_) {}
-}
-
-/// Plays an error beep using the Web Audio API (best-effort).
-///
-/// Note: This may be silently blocked by Chrome's autoplay policy if no
-/// prior user gesture has occurred. The primary feedback channel is [playSpeech].
 void playErrorSound() {
   try {
-    cancelSpeech(); // Ensure speech is stopped before beeping
+    final ctx = _AudioContext();
+    
+    final osc = ctx.createOscillator();
+    final gain = ctx.createGain();
+    
+    osc.type = 'square'.toJS;
+    osc.frequency.value = 250.0.toJS;
+    
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    
+    try {
+      osc.start(0.toJS);
+    } catch (_) {
+      try {
+        osc.start();
+      } catch (_) {}
+    }
+    
+    final stopTime = (ctx.currentTime.toDartDouble + 0.25).toJS;
+    gain.gain.exponentialRampToValueAtTime(0.00001.toJS, stopTime);
+    
+    try {
+      osc.stop(stopTime);
+    } catch (_) {}
   } catch (_) {}
 }
+
+void playSpeech(String message) {}
+void cancelSpeech() {}

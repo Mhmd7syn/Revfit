@@ -61,11 +61,7 @@ class TtsService {
 
     _cooldowns[message] = now;
 
-    if (kIsWeb) {
-      playSpeech(message); // Web Speech API
-    } else {
-      await _tts.speak(message); // flutter_tts (native)
-    }
+    playErrorSound();
 
     return true;
   }
