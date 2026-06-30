@@ -32,6 +32,28 @@ Welcome to **RevFit**, an all-in-one AI-powered health assistant that helps user
 
 ---
 
+## 📸 Screenshots
+
+Here are some screenshots showcasing the application's user interface and features:
+
+| Login | Registration |
+| :---: | :---: |
+| ![Login Screen](Screenshots/Login.jpeg) | ![Registration Screen](Screenshots/Registration%20Screen.jpeg) |
+
+| Onboarding Questionnaire - Page 1 | Onboarding Questionnaire - Page 2 |
+| :---: | :---: |
+| ![Onboarding 1](Screenshots/Onboarding%20Questionnaire%201.jpeg) | ![Onboarding 2](Screenshots/Onboarding%20Questionnaire%202.jpeg) |
+
+| User Dashboard | Post-Workout Analysis |
+| :---: | :---: |
+| ![User Dashboard](Screenshots/User%20Dashboard.jpeg) | ![Post-Workout Analysis Report](Screenshots/Post-Workout%20Analysis%20Report.jpeg) |
+
+| Workout Recommendations | Diet Recommendations |
+| :---: | :---: |
+| ![Workout Recommendations](Screenshots/Workout%20Recommendations.jpeg) | ![Diet Recommendations](Screenshots/Diet%20Recommendations.jpeg) |
+
+---
+
 ## 🛠 Project Structure
 
 - **`/backend`**: FastAPI backend service. Houses the recommendation logic, databases, feedback stores, and ML model inference code.

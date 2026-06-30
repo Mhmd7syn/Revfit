@@ -30,7 +30,6 @@ migrate_working_dir/
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
-/build/
 /coverage/
 
 # Symbolication related
@@ -49,3 +48,41 @@ app.*.map.json
 
 # Pose outputs ~~~ ignore mp4 files
 **/pose_outputs/*.mp4
+
+
+# ==============================================================================
+# FLUTTER BUILD EXCEPTIONS
+# ==============================================================================
+
+# 1. Broadly ignore everything inside the build directory
+/build/*
+
+# ------------------------------------------------------------------------------
+# ANDROID RELEASE EXCEPTION
+# ------------------------------------------------------------------------------
+!/build/app/
+/build/app/*
+
+!/build/app/outputs/
+/build/app/outputs/*
+
+!/build/app/outputs/flutter-apk/
+/build/app/outputs/flutter-apk/*
+
+!/build/app/outputs/flutter-apk/app-release.apk
+
+# ------------------------------------------------------------------------------
+# WINDOWS RELEASE EXCEPTION
+# ------------------------------------------------------------------------------
+!/build/windows/
+/build/windows/*
+
+!/build/windows/x64/
+/build/windows/x64/*
+
+!/build/windows/x64/runner/
+/build/windows/x64/runner/*
+
+# This un-ignores the entire Release folder containing your .exe and .dll files
+!/build/windows/x64/runner/Release/
+!/build/windows/x64/runner/Release/*
