@@ -37,6 +37,14 @@ app.include_router(pose.router,      prefix="/pose",      tags=["Pose Analysis"]
 # Serve annotated correction videos as static files
 app.mount("/pose-outputs", StaticFiles(directory=POSE_OUTPUT_DIR), name="pose-outputs")
 
+# ── TEST MODE: serve local files so the Android device can fetch them ──────────
+# The phone streams the test video over HTTP from this endpoint.
+# Remove this block when reverting to real camera.
+import os as _os
+_DOWNLOADS_DIR = _os.path.expanduser("~/Downloads")
+app.mount("/test-files", StaticFiles(directory=_DOWNLOADS_DIR), name="test-files")
+# ───────────────────────────────────────────────────────────────────────────────
+
 
 @app.get("/", tags=["Health"])
 def root():

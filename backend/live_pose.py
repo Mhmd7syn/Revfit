@@ -40,6 +40,7 @@ from process_video import (
     MP_POSE,
 )
 from evaluation import get_active_sides, evaluate_metrics
+from inference import draw_skeleton, create_info_bar, draw_overlays
 from exercise_config import EXERCISE_TO_CONFIG, JOINT_DEFINITIONS
 from repetition_counter import RepetitionCounter
 
@@ -102,6 +103,7 @@ class LivePoseProcessor:
         self.frame_count = 0
         self.bad_frame_count = 0
         self.feedbacks: Dict[str, list] = {}
+        self._warmup_frames = 0  # frames processed without valid pose detection
 
         # Internal state dict expected by evaluate_metrics
         self._eval_state = {
@@ -121,16 +123,17 @@ class LivePoseProcessor:
     # ------------------------------------------------------------------
 
     def process_frame(self, jpeg_bytes: bytes) -> dict:
-        """Decode a JPEG frame and run the full inference pipeline.
+        """Decode a JPEG frame, run the full inference pipeline, draw skeleton,
+        and return both metadata dict and an annotated JPEG.
 
-        Returns a dict suitable for JSON serialisation::
+        Returns a dict::
 
             {
                 "is_good_form": True,
-                "feedback_messages": ["[LEFT] Keep elbows tucked"],
+                "feedback_messages": [...],
                 "rep_count": 3,
                 "form_score": 87.5,
-                "landmarks": [[0.52, 0.31, 0.99], ...],   # 33 × [x, y, vis]
+                "annotated_jpeg": <bytes>,   # backend-annotated frame
             }
         """
         # Decode JPEG → OpenCV BGR frame
@@ -147,14 +150,6 @@ class LivePoseProcessor:
         rgb.flags.writeable = False
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
         results = self.mp_pose.detect(mp_image)
-
-        # Extract 2D landmarks for the overlay (normalised 0-1)
-        landmarks_2d: List[List[float]] = []
-        if results.pose_landmarks and len(results.pose_landmarks) > 0:
-            landmarks_2d = [
-                [lm.x, lm.y, lm.visibility]
-                for lm in results.pose_landmarks[0]
-            ]
 
         # Extract 3D world landmarks for TCN
         if results.pose_world_landmarks and len(results.pose_world_landmarks) > 0:
@@ -198,6 +193,11 @@ class LivePoseProcessor:
             active_sides,
         )
 
+        # Suppress "No pose detected" during warmup / brief loss
+        if feedback_messages == ["No pose detected"]:
+            feedback_messages = []
+            is_good_form = True
+
         if not is_good_form and feedback_messages:
             self.bad_frame_count += 1
 
@@ -215,12 +215,28 @@ class LivePoseProcessor:
                 2,
             )
 
+        # ── Draw annotated frame (same as pose_analysis.py) ──────────────
+        display = frame.copy()
+        h, w = display.shape[:2]
+        min_height = 360
+        if h < min_height:
+            scale = min_height / h
+            display = cv2.resize(display, (int(w * scale), int(h * scale)))
+            h, w = display.shape[:2]
+
+        # Draw skeleton with green/red highlighting
+        draw_skeleton(display, results, self.metric_configs, bad_joints, active_sides)
+
+        # Encode to JPEG (75% quality — matches stream_analyze_video)
+        _, jpeg_buf = cv2.imencode(".jpg", display, [cv2.IMWRITE_JPEG_QUALITY, 75])
+        annotated_jpeg: bytes = jpeg_buf.tobytes()
+
         return {
             "is_good_form": is_good_form,
             "feedback_messages": feedback_messages,
             "rep_count": self._eval_state["rep_count"],
             "form_score": form_score,
-            "landmarks": landmarks_2d,
+            "annotated_jpeg": annotated_jpeg,
         }
 
     def get_summary(self) -> dict:
@@ -356,8 +372,8 @@ class LivePoseProcessor:
         """Return a safe empty response for undecodable frames."""
         return {
             "is_good_form": True,
-            "feedback_messages": ["No frame data"],
+            "feedback_messages": [],
             "rep_count": self._eval_state.get("rep_count", 0),
             "form_score": 100.0,
-            "landmarks": [],
+            "annotated_jpeg": b"",  # no frame to send
         }

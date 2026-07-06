@@ -37,8 +37,15 @@ class PoseService {
   static String _historyPath(String sessionId) =>
       '/pose/history/$sessionId';
 
-  static String _livePath(String sessionId, String exercise) =>
-      '/pose/live/$sessionId?exercise=${Uri.encodeComponent(exercise)}';
+  static String _livePath(String sessionId, String exercise,
+      {String? testVideo}) {
+    var path =
+        '/pose/live/$sessionId?exercise=${Uri.encodeComponent(exercise)}';
+    if (testVideo != null && testVideo.isNotEmpty) {
+      path += '&test_video=${Uri.encodeComponent(testVideo)}';
+    }
+    return path;
+  }
 
   static String _streamAnalyzePath(
     String sessionId,
@@ -56,18 +63,21 @@ class PoseService {
 
   /// Connect to the live pose estimation WebSocket.
   ///
-  /// Returns a [WebSocketChannel] that:
-  /// - **accepts** binary JPEG frames via `channel.sink.add(Uint8List)`
-  /// - **emits** JSON text messages via `channel.stream` with per-frame
-  ///   results: `{is_good_form, feedback_messages, rep_count, form_score, landmarks}`.
+  /// In **test mode**, pass [testVideoServerPath] — the **server-side** absolute
+  /// path to a video file.  The backend will read and loop it internally,
+  /// pushing annotated frames without needing the client to send any frames.
   ///
-  /// Close the channel when the session ends to trigger the server-side
-  /// summary storage.
+  /// Returns a [WebSocketChannel] that emits:
+  /// - **Text** JSON `{"type": "frame", ...}` per frame
+  /// - **Binary** JPEG annotated frames
   static WebSocketChannel connectLive({
     required String sessionId,
     required String exerciseName,
+    String? testVideoServerPath,
   }) {
-    final uri = Uri.parse('$_wsBaseUrl${_livePath(sessionId, exerciseName)}');
+    final uri = Uri.parse(
+      '$_wsBaseUrl${_livePath(sessionId, exerciseName, testVideo: testVideoServerPath)}',
+    );
     return WebSocketChannel.connect(uri);
   }
 

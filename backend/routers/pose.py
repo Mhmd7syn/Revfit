@@ -16,7 +16,7 @@ import os
 import shutil
 import tempfile
 import time
-from typing import List
+from typing import List, Optional
 
 from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile, WebSocket, WebSocketDisconnect
 
@@ -357,30 +357,43 @@ async def live_pose(
     websocket: WebSocket,
     session_id: str,
     exercise: str = Query(..., description="Exercise name for form evaluation"),
+    test_video: Optional[str] = Query(
+        None,
+        description=(
+            "Server-side absolute path to a video file.  When provided the "
+            "backend reads and loops the video internally — the client does "
+            "NOT need to send any frames.  Useful for testing without a camera."
+        ),
+    ),
 ):
     """
     Real-time pose estimation over WebSocket.
 
-    The client sends raw JPEG frame bytes as binary messages.
-    The server responds with a JSON text message per frame containing::
+    **Normal mode** (camera): client sends raw JPEG/PNG binary frames;
+    server returns annotated JPEG + JSON metadata per frame.
 
-        {
-            "is_good_form": true,
-            "feedback_messages": [...],
-            "rep_count": 3,
-            "form_score": 87.5,
-            "landmarks": [[x, y, vis], ...]
-        }
+    **Test mode** (``test_video`` param): server reads the given video file
+    directly, processes it frame-by-frame in a loop, and streams annotated
+    frames to the client — no client→server upload needed.
 
-    On disconnect, a final summary is stored in the session history.
+    Protocol (server → client), both modes:
+
+    1. **Text** JSON::
+
+        {"type": "frame", "is_good_form": true, "feedback": [...],
+         "rep_count": 3, "form_score": 87.5}
+
+    2. **Binary** annotated JPEG frame (skeleton drawn by OpenCV).
     """
-    # Validate session
+    import cv2 as _cv2
+
+    # ── Validate session ─────────────────────────────────────────────────
     user = state.get_user(session_id)
     if not user:
         await websocket.close(code=4004, reason=f"Session '{session_id}' not found")
         return
 
-    # Validate exercise
+    # ── Validate exercise ────────────────────────────────────────────────
     exercise_lower = exercise.lower()
     from exercise_config import EXERCISE_TO_CONFIG
     if exercise_lower not in EXERCISE_TO_CONFIG:
@@ -390,31 +403,107 @@ async def live_pose(
         )
         return
 
+    # ── Validate test_video path (if provided) ───────────────────────────
+    if test_video is not None:
+        import os as _os
+        # Support ~ expansion
+        test_video = _os.path.expanduser(test_video)
+        if not _os.path.isfile(test_video):
+            await websocket.close(
+                code=4002,
+                reason=f"test_video not found on server: {test_video}",
+            )
+            return
+
     await websocket.accept()
 
-    # Create processor
     processor = LivePoseProcessor(exercise_lower)
     loop = asyncio.get_event_loop()
 
+    # ── Helper: encode one result dict → send JSON text + binary JPEG ────
+    async def _send_result(result: dict):
+        annotated_jpeg: bytes = result.pop("annotated_jpeg", b"")
+        frame_msg = {
+            "type": "frame",
+            "is_good_form": result["is_good_form"],
+            "feedback": result["feedback_messages"],
+            "rep_count": result["rep_count"],
+            "form_score": result["form_score"],
+        }
+        await websocket.send_text(json.dumps(frame_msg))
+        if annotated_jpeg:
+            await websocket.send_bytes(annotated_jpeg)
+
     try:
-        while True:
-            # Receive binary JPEG data from the client
-            data = await websocket.receive_bytes()
+        if test_video:
+            # ── TEST MODE: backend reads video, loops it, pushes frames ──────
+            # Target ~10 fps — throttle with asyncio.sleep to avoid flooding
+            _TARGET_FPS = 10
+            _frame_delay = 1.0 / _TARGET_FPS
 
-            # Run CPU-heavy inference off the event loop
-            result = await loop.run_in_executor(
-                None, processor.process_frame, data
-            )
+            cap = _cv2.VideoCapture(test_video)
+            if not cap.isOpened():
+                await websocket.send_text(json.dumps({
+                    "type": "error",
+                    "message": f"Cannot open video: {test_video}",
+                }))
+                await websocket.close()
+                return
 
-            # Send JSON response
-            await websocket.send_text(json.dumps(result))
+            # Get native FPS to derive a per-frame read stride
+            native_fps = cap.get(_cv2.CAP_PROP_FPS) or 30.0
+            # Read every Nth frame so we approximate target FPS
+            stride = max(1, int(round(native_fps / _TARGET_FPS)))
+
+            frame_idx = 0
+            while True:
+                ret, bgr_frame = cap.read()
+                if not ret:
+                    # End of video — loop back
+                    cap.set(_cv2.CAP_PROP_POS_FRAMES, 0)
+                    frame_idx = 0
+                    continue
+
+                frame_idx += 1
+                if frame_idx % stride != 0:
+                    # Skip to approximate target FPS
+                    continue
+
+                # Encode to JPEG and run inference
+                _, jpeg_buf = _cv2.imencode(
+                    ".jpg", bgr_frame, [_cv2.IMWRITE_JPEG_QUALITY, 85]
+                )
+                jpeg_bytes = jpeg_buf.tobytes()
+
+                result = await loop.run_in_executor(
+                    None, processor.process_frame, jpeg_bytes
+                )
+
+                try:
+                    await _send_result(result)
+                except Exception:
+                    # Client disconnected
+                    break
+
+                # Throttle to avoid CPU/network overload
+                await asyncio.sleep(_frame_delay)
+
+            cap.release()
+
+        else:
+            # ── NORMAL MODE: receive frames from client ───────────────────────
+            while True:
+                data = await websocket.receive_bytes()
+                result = await loop.run_in_executor(
+                    None, processor.process_frame, data
+                )
+                await _send_result(result)
 
     except WebSocketDisconnect:
         pass
     except Exception:
         pass
     finally:
-        # Build and store session summary
         summary = processor.get_summary()
         state.store_pose_result(session_id, summary)
         processor.close()
