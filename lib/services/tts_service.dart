@@ -61,7 +61,13 @@ class TtsService {
 
     _cooldowns[message] = now;
 
-    playErrorSound();
+    if (kIsWeb) {
+      // Web: synthesise a beep via Web Audio API
+      playErrorSound();
+    } else {
+      // Native (Android / iOS): No speech, just warning sound + haptic buzz
+      playErrorSound();
+    }
 
     return true;
   }

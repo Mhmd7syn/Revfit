@@ -157,15 +157,9 @@ class _PoseAnalysisScreenState extends State<PoseAnalysisScreen>
           _classificationConfidence = confidence;
           _isClassifying = false;
 
-          if (confidence >= _confidenceThreshold) {
-            // High confidence → auto-populate exercise
-            _selectedExercise = predicted;
-            _showManualOverride = false;
-          } else {
-            // Low confidence → show warning and expose dropdown
-            _selectedExercise = predicted;
-            _showManualOverride = true;
-          }
+          // Always show the dropdown so the user can confirm or change
+          _selectedExercise = predicted;
+          _showManualOverride = true;
         });
       }
     } catch (e) {
@@ -896,43 +890,19 @@ class _PoseAnalysisScreenState extends State<PoseAnalysisScreen>
 
   Widget _buildClassificationResult() {
     final confidence = _classificationConfidence ?? 0.0;
-    final confidencePercent = (confidence * 100).round();
-    final isHigh = confidence >= 0.80;
-    final isMedium = confidence >= 0.50 && confidence < 0.80;
-
-    final badgeColor = isHigh
-        ? AppColors.successColor
-        : isMedium
-            ? AppColors.warningColor
-            : AppColors.errorColor;
+    // Card is always green — confidence level does not affect the color
+    const cardColor = AppColors.successColor;
 
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: badgeColor.withOpacity(0.06),
+        color: cardColor.withOpacity(0.06),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: badgeColor.withOpacity(0.25)),
+        border: Border.all(color: cardColor.withOpacity(0.25)),
       ),
       child: Row(
         children: [
-          // Confidence badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: badgeColor.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              '$confidencePercent%',
-              style: TextStyle(
-                color: badgeColor,
-                fontWeight: FontWeight.w800,
-                fontSize: 13,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          // Exercise name
+          // Exercise name (no percentage badge)
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -946,21 +916,17 @@ class _PoseAnalysisScreenState extends State<PoseAnalysisScreen>
                   ),
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  confidence >= _confidenceThreshold
-                      ? 'Auto-detected exercise'
-                      : 'Low confidence — please confirm',
+                const Text(
+                  'Auto-detected exercise',
                   style: TextStyle(
-                    color: confidence >= _confidenceThreshold
-                        ? AppColors.textMuted
-                        : AppColors.warningColor,
+                    color: AppColors.textMuted,
                     fontSize: 11,
                   ),
                 ),
               ],
             ),
           ),
-          // Change button
+          // Done button — dropdown is always visible, tap to collapse
           GestureDetector(
             onTap: () => setState(() => _showManualOverride = !_showManualOverride),
             child: Container(
