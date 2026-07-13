@@ -32,7 +32,7 @@ import state
 router = APIRouter()
 
 # Load once at startup
-_CSV_PATH = os.path.join(os.path.dirname(__file__), "..", "megaGymDataset.csv")
+_CSV_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "megaGymDataset.csv")
 try:
     _ALL_WORKOUTS: List[WorkoutItem] = load_workouts_csv(_CSV_PATH)
 except FileNotFoundError:

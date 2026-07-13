@@ -8,24 +8,24 @@ Welcome to the **RevFit Backend**, a FastAPI-powered recommendation engine and p
 
 Here is an overview of the backend workspace structure:
 
-*   **[`main.py`](file:///home/kero/Github/Revfit/backend/main.py)**: The entry point of the FastAPI application. Includes middlewares, mounts static files, and aggregates the endpoints from all sub-routers.
-*   **[`routers/`](file:///home/kero/Github/Revfit/backend/routers)**: Sub-routers containing endpoints grouped by resource domains:
-    *   [`users.py`](file:///home/kero/Github/Revfit/backend/routers/users.py): User profile management, calorie calculations, and session handling.
-    *   [`workouts.py`](file:///home/kero/Github/Revfit/backend/routers/workouts.py): Catalog query, filter, and plan generators for workouts.
-    *   [`meals.py`](file:///home/kero/Github/Revfit/backend/routers/meals.py): Recipe fetchers, hard filters, and scoring logic from Spoonacular.
-    *   [`meal_plan.py`](file:///home/kero/Github/Revfit/backend/routers/meal_plan.py): Day-by-day daily meal plans with macro targets.
-    *   [`feedback.py`](file:///home/kero/Github/Revfit/backend/routers/feedback.py): Like/dislike logging for both workouts and meals.
-    *   [`pose.py`](file:///home/kero/Github/Revfit/backend/routers/pose.py): Video uploads for form scoring and correction.
-*   **[`schemas.py`](file:///home/kero/Github/Revfit/backend/schemas.py)**: Type-safe input/output models using Pydantic, enforcing constraints (e.g., matching fitness levels, diet types, goals).
-*   **[`constants.py`](file:///home/kero/Github/Revfit/backend/constants.py)**: Contains static configurations, workout splits (Push/Pull/Legs, Upper/Lower, Full Body), and decay definitions.
-*   **[`state.py`](file:///home/kero/Github/Revfit/backend/state.py)**: In-memory session store mapping active UUID tokens to user profiles and pose results.
-*   **[`user_profile.py`](file:///home/kero/Github/Revfit/backend/user_profile.py)**: Dataclasses for user details, including Mifflin-St Jeor BMR formulas, TDEE scaling, and feedback memory.
-*   **[`filters.py`](file:///home/kero/Github/Revfit/backend/filters.py)**: The core recommendation algorithm (hard constraint filtering + linear heuristic scoring + user feedback boosts).
-*   **[`feedback.py`](file:///home/kero/Github/Revfit/backend/feedback.py)**: Implements persistent storage (`feedback_store.json`) and **exponential decay** for workout preferences.
-*   **[`pose_analysis.py`](file:///home/kero/Github/Revfit/backend/pose_analysis.py)**: Integrates with the `Pose/Code` module to run OpenCV-based headless inference on video feeds, drawing overlays and calculating rep counts/form scores. Uses `RepetitionCounter` for robust rep detection.
-*   **[`recommender.py`](file:///home/kero/Github/Revfit/backend/recommender.py)**: Unified controller mapping workouts, meals, splits, and constraints into a single recommendation payload.
-*   **[`megaGymDataset.csv`](file:///home/kero/Github/Revfit/backend/megaGymDataset.csv)**: Local workout dataset containing Title, Type, BodyPart, Equipment, Level, and Rating.
-*   **[`feedback_store.json`](file:///home/kero/Github/Revfit/backend/feedback_store.json)**: Local persistence store for logged likes/dislikes.
+*   **[`main.py`](./main.py)**: The entry point of the FastAPI application. Includes middlewares, mounts static files, and aggregates the endpoints from all sub-routers.
+*   **[`routers/`](./routers)**: Sub-routers containing endpoints grouped by resource domains:
+    *   [`users.py`](./routers/users.py): User profile management, calorie calculations, and session handling.
+    *   [`workouts.py`](./routers/workouts.py): Catalog query, filter, and plan generators for workouts.
+    *   [`meals.py`](./routers/meals.py): Recipe fetchers, hard filters, and scoring logic from Spoonacular.
+    *   [`meal_plan.py`](./routers/meal_plan.py): Day-by-day daily meal plans with macro targets.
+    *   [`feedback.py`](./routers/feedback.py): Like/dislike logging for both workouts and meals.
+    *   [`pose.py`](./routers/pose.py): Video uploads for form scoring and correction.
+*   **[`schemas.py`](./schemas.py)**: Type-safe input/output models using Pydantic, enforcing constraints (e.g., matching fitness levels, diet types, goals).
+*   **[`constants.py`](./constants.py)**: Contains static configurations, workout splits (Push/Pull/Legs, Upper/Lower, Full Body), and decay definitions.
+*   **[`state.py`](./state.py)**: In-memory session store mapping active UUID tokens to user profiles and pose results.
+*   **[`user_profile.py`](./user_profile.py)**: Dataclasses for user details, including Mifflin-St Jeor BMR formulas, TDEE scaling, and feedback memory.
+*   **[`filters.py`](./filters.py)**: The core recommendation algorithm (hard constraint filtering + linear heuristic scoring + user feedback boosts).
+*   **[`feedback.py`](./feedback.py)**: Implements persistent storage (`feedback_store.json`) and **exponential decay** for workout preferences.
+*   **[`pose_analysis.py`](./pose_analysis.py)**: Integrates with the `research/Pose/Code` module to run OpenCV-based headless inference on video feeds, drawing overlays and calculating rep counts/form scores. Uses `RepetitionCounter` for robust rep detection.
+*   **[`recommender.py`](./recommender.py)**: Unified controller mapping workouts, meals, splits, and constraints into a single recommendation payload.
+*   **[`megaGymDataset.csv`](./data/megaGymDataset.csv)**: Local workout dataset containing Title, Type, BodyPart, Equipment, Level, and Rating.
+*   **[`feedback_store.json`](./feedback_store.json)**: Local persistence store for logged likes/dislikes.
 
 ---
 

@@ -25,7 +25,7 @@ from Request_Api import fetch_recipes
 #  Load workouts from CSV                                             #
 # ═══════════════════════════════════════════════════════════════════ #
 
-_csv_path = os.path.join(os.path.dirname(__file__), "megaGymDataset.csv")
+_csv_path = os.path.join(os.path.dirname(__file__), "data", "megaGymDataset.csv")
 workouts = load_workouts_csv(_csv_path)
 print(f"  Loaded {len(workouts)} workouts from megaGymDataset.csv")
 

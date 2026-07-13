@@ -21,7 +21,7 @@ from typing import Dict, List, Optional
 # Make the Pose/Code package importable
 # ---------------------------------------------------------------------------
 _POSE_CODE_DIR = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "Pose", "Code")
+    os.path.join(os.path.dirname(__file__), "..", "research", "Pose", "Code")
 )
 if _POSE_CODE_DIR not in sys.path:
     sys.path.insert(0, _POSE_CODE_DIR)

@@ -21,7 +21,7 @@ options = vision.PoseLandmarkerOptions(
     min_pose_presence_confidence=0.5,
     min_tracking_confidence=0.5)
 
-cap = cv2.VideoCapture("/home/kero/Downloads/squat.mp4")
+cap = cv2.VideoCapture("squat.mp4")
 with vision.PoseLandmarker.create_from_options(options) as landmarker:
     ret, frame = cap.read()
     if ret:

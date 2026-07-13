@@ -42,7 +42,7 @@ from Request_Api import fetch_recipes
 #  Workouts — load from CSV                                           #
 # ------------------------------------------------------------------ #
 
-def load_workouts(csv_path: str = "megaGymDataset.csv") -> List[WorkoutItem]:
+def load_workouts(csv_path: str = "data/megaGymDataset.csv") -> List[WorkoutItem]:
     """Load the gym dataset CSV into a list of WorkoutItem objects."""
     df = pd.read_csv(csv_path)
     workouts = []
@@ -72,7 +72,7 @@ def load_workouts(csv_path: str = "megaGymDataset.csv") -> List[WorkoutItem]:
 
 def recommend(
     user: UserProfile,
-    csv_path: str = "megaGymDataset.csv",
+    csv_path: str = "data/megaGymDataset.csv",
     top_k_workouts: int = 5,
     top_k_meals: int = 5,
     offline_recipes: List[RecipeItem] = None,
@@ -129,7 +129,7 @@ def recommend(
 def recommend_muscle(
     user,
     muscle: str,
-    csv_path: str = "megaGymDataset.csv",
+    csv_path: str = "data/megaGymDataset.csv",
     top_k: int = 5,
 ):
     """

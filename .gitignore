@@ -49,6 +49,9 @@ app.*.map.json
 # Pose outputs ~~~ ignore mp4 files
 **/pose_outputs/*.mp4
 
+# Local state / databases
+feedback_store.json
+
 
 # ==============================================================================
 # FLUTTER BUILD EXCEPTIONS

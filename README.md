@@ -2,6 +2,8 @@
 
 Welcome to **RevFit**, an all-in-one AI-powered health assistant that helps users track, plan, and analyze their fitness and nutrition goals. The application combines a personalized recommender engine, custom workout and diet planning, a responsive AI chatbot, and a deep learning-based computer vision pipeline for automated exercise classification and pose analysis.
 
+📁 **[Google Drive: Demo, Documentation, & More](https://drive.google.com/open?id=10jTNQDiFcTOag_946MqjHvYq4ba6ymUK&usp=drive_fs)** - Check this link for additional info, project documentation, demo videos, and other related folders!
+
 ---
 
 ## 🚀 Key Features
@@ -56,10 +58,10 @@ Here are some screenshots showcasing the application's user interface and featur
 
 ## 🛠 Project Structure
 
+- **`/frontend`**: Flutter frontend codebase including layout screens, state management, and API services for mobile, web, and desktop.
 - **`/backend`**: FastAPI backend service. Houses the recommendation logic, databases, feedback stores, and ML model inference code.
-- **`/lib`**: Flutter frontend codebase including layout screens, state management, and API services.
-- **`/Pose`**: Independent computer vision pipelines and pose-scoring helpers.
-- **`/recommender_sys`**: Core recommendation logic experiments and testing resources.
+- **`/research`**: Experimental pipelines, data science models, and research notebooks including the pose estimation and recommender system environments.
+- **`/docs`**: Project documentation.
 
 ---
 
@@ -80,9 +82,6 @@ source .venv/bin/activate
 # Install required dependencies
 pip install -r requirements.txt
 
-# Run the database/main startup script
-python main.py
-
 # Launch the FastAPI web server with hot reload
 uvicorn main:app --reload
 ```
@@ -93,6 +92,9 @@ Once running, the backend server defaults to `http://localhost:8000`. You can ac
 The frontend is built with Flutter and supports mobile, web, and desktop. Ensure your Flutter environment is configured, and run:
 
 ```bash
+# Navigate to the frontend directory
+cd frontend
+
 # Execute the Flutter application
 flutter run
 ```

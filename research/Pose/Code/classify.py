@@ -62,9 +62,10 @@ class PoseLandmark(IntEnum):
     RIGHT_FOOT_INDEX = 32
 
 # ── Paths (EDIT THESE) ───────────────────────────────────────────────────────
-MODEL_PATH   = "/home/kero/Github/Revfit/Pose/Final_Classifer/best_stgcn_v2.pt"
-ENCODER_PATH = "/home/kero/Github/Revfit/Pose/Final_Classifer/label_encoder.pkl"
-VIDEO_PATH   = "/home/kero/Downloads/squat.mp4"
+_MODELS_DIR  = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "Models"))
+MODEL_PATH   = os.path.join(_MODELS_DIR, "best_stgcn_v2.pt")
+ENCODER_PATH = os.path.join(_MODELS_DIR, "label_encoder.pkl")
+VIDEO_PATH   = "squat.mp4" # Place a video in this directory to test
 
 # ── Constants (must match training exactly) ──────────────────────────────────
 N_JOINTS = 25
