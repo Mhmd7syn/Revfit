@@ -102,6 +102,9 @@ flutter run
 Ensure the backend server is running in the background so the frontend can retrieve user session data, workout recommendations, and process uploaded video files.
 
 ### 3. Running the Pre-built Windows Release
-For a quick launch on Windows without compiling from source, a pre-built executable is available:
-- **Release Executable Path:** `build/windows/x64/runner/Release/gym2.exe`
-- **Shortcut Path:** `gym2.exe - Shortcut.lnk`
+For a quick launch on Windows without compiling from source, a pre-built executable is available. 
+
+You can simply double-click the **`start-app.bat`** script located in the root directory to instantly launch the application.
+
+Alternatively, you can manually run the executable located at:
+- **Release Executable Path:** `frontend/build/windows/x64/runner/Release/gym2.exe`
